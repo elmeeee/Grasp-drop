@@ -45,6 +45,7 @@ Install Grasp as a native macOS application via Homebrew Cask:
 
 ```bash
 brew tap elmeeee/grasp-drop https://github.com/elmeeee/Grasp-drop.git
+brew trust elmeeee/grasp-drop
 brew install --cask grasp
 ```
 
