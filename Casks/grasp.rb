@@ -9,6 +9,12 @@ cask "grasp" do
 
   app "Grasp.app"
 
+  postflight do
+    system_command "/usr/bin/xattr",
+                   args: ["-rd", "com.apple.quarantine", "#{appdir}/Grasp.app"],
+                   sudo: false
+  end
+
   zap trash: [
     "~/Downloads/Grasp",
   ]
