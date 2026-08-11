@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="BarIcon@2x.png" width="80" height="80" alt="Grasp Logo">
+  <img src="Resources/BarIcon@2x.png" width="80" height="80" alt="Grasp Logo">
 </p>
 
 <h1 align="center">Grasp</h1>
