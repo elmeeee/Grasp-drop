@@ -107,13 +107,34 @@ struct SettingsView: View {
                         )
                     }
 
-                    // Section 2: Automation
+                    // Section 2: Automation & Shortcuts
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("TRANSFER AUTOMATION")
+                        Text("AUTOMATION & SHORTCUTS")
                             .font(.system(size: 10, weight: .bold))
                             .foregroundColor(.secondary)
 
                         VStack(spacing: 10) {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Global Shortcut")
+                                        .font(.subheadline)
+                                    Text("Open Grasp Menu Bar panel from anywhere")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                }
+                                Spacer()
+                                Text("⌘ ⇧ G")
+                                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(Color.blue.opacity(0.2))
+                                    .foregroundColor(.blue)
+                                    .cornerRadius(6)
+                            }
+
+                            Divider()
+                                .opacity(0.3)
+
                             HStack {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text("Auto-Accept Incoming Transfers")

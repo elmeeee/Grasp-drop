@@ -12,6 +12,7 @@ import (
 	"runtime"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -20,6 +21,11 @@ type FileItem struct {
 	Size int64  `json:"size"`
 	Date int64  `json:"date"`
 }
+
+var (
+	clipboardLock    sync.Mutex
+	currentClipboard string
+)
 
 func main() {
 	homeDir, err := os.UserHomeDir()
@@ -43,6 +49,10 @@ func main() {
 			handleFileList(w, r, downloadDir)
 			return
 		}
+		if r.URL.Path == "/api/clipboard" {
+			handleClipboard(w, r)
+			return
+		}
 		if strings.HasPrefix(r.URL.Path, "/download/") && r.Method == "GET" {
 			filename := strings.TrimPrefix(r.URL.Path, "/download/")
 			handleFileDownload(w, r, downloadDir, filename)
@@ -56,7 +66,7 @@ func main() {
 	})
 
 	fmt.Println("==================================================")
-	fmt.Println("   🚀 GRASP STANDALONE SERVER (WINDOWS & LINUX)")
+	fmt.Println("   GRASP STANDALONE SERVER (WINDOWS & LINUX)")
 	fmt.Println("==================================================")
 	fmt.Printf("   Save Folder : %s\n", downloadDir)
 	fmt.Printf("   Web Hub URL : %s\n", serverURL)
@@ -90,6 +100,33 @@ func getLocalIP() string {
 		}
 	}
 	return "127.0.0.1"
+}
+
+func handleClipboard(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	if r.Method == "GET" {
+		clipboardLock.Lock()
+		text := currentClipboard
+		clipboardLock.Unlock()
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{"text": text})
+		return
+	}
+	if r.Method == "POST" {
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, "Read error", http.StatusBadRequest)
+			return
+		}
+		clipboardLock.Lock()
+		currentClipboard = string(body)
+		clipboardLock.Unlock()
+		fmt.Printf("[Clipboard Synced] %s\n", string(body))
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("OK"))
+		return
+	}
+	http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 }
 
 func handleFileList(w http.ResponseWriter, r *http.Request, downloadDir string) {
@@ -198,7 +235,7 @@ func getWebHTML() string {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grasp — Windows & Linux Standalone Server</title>
+    <title>Grasp — Cross-Platform File Hub & Clipboard Sync</title>
     <style>
         :root { --bg: #0b0f19; --card: #151c2c; --primary: #4f46e5; --accent: #06b6d4; --text: #f8fafc; --muted: #94a3b8; }
         * { box-sizing: border-box; }
@@ -223,6 +260,7 @@ func getWebHTML() string {
         .file-meta { font-size: 11px; color: var(--muted); }
         .dl-btn { background: rgba(255,255,255,0.1); color: white; text-decoration: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; transition: background 0.2s; }
         .dl-btn:hover { background: var(--accent); }
+        textarea { width: 100%; height: 90px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; color: white; font-family: inherit; font-size: 13px; resize: none; margin-bottom: 8px; }
     </style>
 </head>
 <body>
@@ -240,12 +278,19 @@ func getWebHTML() string {
                     <path d="M 10.5 16.5 C 7.462 16.5 5 14.038 5 11 C 5 7.962 7.462 5.5 10.5 5.5 C 13.538 5.5 16 7.962 16 11" stroke="#06b6d4" stroke-opacity="0.6" stroke-width="2.2" stroke-linecap="round"/>
                 </svg>
             </div>
-            <h1>Grasp Standalone Server</h1>
-            <p>Direct File Transfer for Android, iPhone, Windows & Linux</p>
+            <h1>Grasp File Hub & Clipboard</h1>
+            <p>Cross-Platform File Transfer & Text Sync</p>
         </div>
 
         <div class="card">
-            <div class="section-title">📤 Send Files to Windows / Linux</div>
+            <div class="section-title">📋 Clipboard Text & Links Sync</div>
+            <textarea id="clipText" placeholder="Paste text or links here to send to Mac clipboard..."></textarea>
+            <button class="btn" onclick="sendClipboard()" style="width: 100%;">Sync Text to Clipboard</button>
+            <div class="status" id="cs"></div>
+        </div>
+
+        <div class="card">
+            <div class="section-title">📤 Upload Files</div>
             <div class="drop-zone" onclick="document.getElementById('f').click()">
                 <div style="font-size: 14px; font-weight: 600; margin-bottom: 4px;">Click or Drag Files Here</div>
                 <div style="font-size: 12px; color: var(--muted);">Supports photos, videos, documents & archives</div>
@@ -267,22 +312,43 @@ func getWebHTML() string {
     </div>
 
     <script>
+        function sendClipboard() {
+            const txt = document.getElementById('clipText').value;
+            if (!txt) return;
+            const cs = document.getElementById('cs');
+            cs.innerText = "Syncing clipboard...";
+            fetch('/api/clipboard', { method: 'POST', body: txt })
+                .then(r => {
+                    if (r.ok) cs.innerText = "✓ Clipboard Synced Successfully!";
+                    else cs.innerText = "✕ Sync Failed!";
+                })
+                .catch(e => cs.innerText = "✕ Error: " + e);
+        }
+
         function upload(files) {
             if (!files || files.length === 0) return;
             const status = document.getElementById('s');
-            status.innerText = "Uploading " + files[0].name + "...";
-            const formData = new FormData();
-            formData.append('file', files[0]);
-            fetch('/upload', { method: 'POST', body: formData })
-                .then(res => {
-                    if (res.ok) {
-                        status.innerText = "✓ File Uploaded Successfully!";
-                        loadFiles();
-                    } else {
-                        status.innerText = "✕ Upload Failed!";
-                    }
-                })
-                .catch(err => status.innerText = "✕ Upload Error: " + err);
+            let completed = 0;
+            const total = files.length;
+            
+            function processNext(index) {
+                if (index >= total) {
+                    status.innerText = "✓ All " + total + " Files Uploaded!";
+                    loadFiles();
+                    return;
+                }
+                const f = files[index];
+                status.innerText = "Uploading (" + (index + 1) + "/" + total + "): " + f.name;
+                const formData = new FormData();
+                formData.append('file', f);
+                fetch('/upload', { method: 'POST', body: formData })
+                    .then(res => {
+                        if (res.ok) processNext(index + 1);
+                        else status.innerText = "✕ Failed at file: " + f.name;
+                    })
+                    .catch(err => status.innerText = "✕ Upload Error: " + err);
+            }
+            processNext(0);
         }
 
         function formatSize(bytes) {

@@ -82,6 +82,26 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         }
 
         setupNotificationCategories()
+        setupGlobalHotkey()
+    }
+
+    private func setupGlobalHotkey() {
+        NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            if event.keyCode == 5 && event.modifierFlags.contains([.command, .shift]) {
+                DispatchQueue.main.async {
+                    self?.togglePanel(nil)
+                }
+            }
+        }
+        NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            if event.keyCode == 5 && event.modifierFlags.contains([.command, .shift]) {
+                DispatchQueue.main.async {
+                    self?.togglePanel(nil)
+                }
+                return nil
+            }
+            return event
+        }
     }
 
     @objc func togglePanel(_ sender: Any?) {

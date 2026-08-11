@@ -9,6 +9,7 @@
 import Foundation
 import Network
 import AppKit
+import NDHackery
 
 @MainActor
 class WebReceiverServer: ObservableObject {
@@ -148,6 +149,10 @@ class WebReceiverServer: ObservableObject {
             sendResponse(connection: connection, status: "200 OK", contentType: "text/html; charset=utf-8", body: webHTML())
         } else if method == "GET" && path == "/api/files" {
             handleFileListAPI(connection: connection)
+        } else if method == "GET" && path == "/api/clipboard" {
+            handleClipboardGetAPI(connection: connection)
+        } else if method == "POST" && path == "/api/clipboard" {
+            handleClipboardPostAPI(connection: connection, rawData: rawData, headerString: headerString)
         } else if method == "GET" && path.hasPrefix("/download/") {
             let filename = String(path.dropFirst("/download/".count))
             handleFileDownload(connection: connection, filename: filename)
@@ -182,6 +187,43 @@ class WebReceiverServer: ObservableObject {
         } else {
             sendResponse(connection: connection, status: "500 Internal Server Error", body: "[]")
         }
+    }
+
+    private func handleClipboardGetAPI(connection: NWConnection) {
+        let text = DispatchQueue.main.sync {
+            NSPasteboard.general.string(forType: .string) ?? ""
+        }
+        let dict = ["text": text]
+        if let jsonData = try? JSONSerialization.data(withJSONObject: dict),
+           let jsonString = String(data: jsonData, encoding: .utf8) {
+            sendResponse(connection: connection, status: "200 OK", contentType: "application/json", body: jsonString)
+        } else {
+            sendResponse(connection: connection, status: "500 Internal Server Error", body: "{}")
+        }
+    }
+
+    private func handleClipboardPostAPI(connection: NWConnection, rawData: Data, headerString: String) {
+        let crlfCrlf = Data([0x0D, 0x0A, 0x0D, 0x0A])
+        if let headerEndRange = rawData.range(of: crlfCrlf) {
+            let bodyData = rawData.subdata(in: headerEndRange.upperBound..<rawData.count)
+            if let text = String(data: bodyData, encoding: .utf8) {
+                DispatchQueue.main.async {
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(text, forType: .string)
+                    
+                    let center = UNUserNotificationCenter.current()
+                    let content = UNMutableNotificationContent()
+                    content.title = "Clipboard Synced 📋"
+                    content.body = "Text copied from Web Hub to Mac clipboard!"
+                    content.sound = .default
+                    let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
+                    center.add(request, withCompletionHandler: nil)
+                }
+                sendResponse(connection: connection, status: "200 OK", contentType: "text/plain", body: "OK")
+                return
+            }
+        }
+        sendResponse(connection: connection, status: "400 Bad Request", body: "Invalid text")
     }
 
     private func handleFileDownload(connection: NWConnection, filename: String) {
