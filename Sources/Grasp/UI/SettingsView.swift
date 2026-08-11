@@ -17,14 +17,14 @@ struct SettingsView: View {
             VisualEffectView(material: .popover, blendingMode: .behindWindow)
                 .ignoresSafeArea()
 
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 14) {
                 // Header
-                HStack {
+                HStack(spacing: 12) {
                     ZStack {
                         Circle()
-                            .fill(LinearGradient(colors: [.blue, .cyan], startPoint: .topLeading, endPoint: .bottomTrailing))
+                            .fill(LinearGradient(colors: [GraspTheme.primary, GraspTheme.accent], startPoint: .topLeading, endPoint: .bottomTrailing))
                             .frame(width: 36, height: 36)
-                            .shadow(color: Color.blue.opacity(0.4), radius: 6, x: 0, y: 2)
+                            .shadow(color: GraspTheme.primary.opacity(0.4), radius: 6, x: 0, y: 2)
 
                         Image(systemName: "gearshape.fill")
                             .font(.system(size: 16, weight: .bold))
@@ -34,7 +34,7 @@ struct SettingsView: View {
                     VStack(alignment: .leading, spacing: 1) {
                         Text("Grasp Preferences")
                             .font(.system(size: 16, weight: .bold, design: .rounded))
-                        Text("Configure device name and automation")
+                        Text("Configure device settings & hotkeys")
                             .font(.caption2)
                             .foregroundColor(.secondary)
                     }
@@ -52,129 +52,132 @@ struct SettingsView: View {
                 Divider()
                     .opacity(0.4)
 
-                // Settings Sections
-                VStack(spacing: 14) {
-                    // Section 1: General
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("GENERAL SETTINGS")
-                            .font(.system(size: 10, weight: .bold))
-                            .foregroundColor(.secondary)
+                // Scrollable Settings Content
+                ScrollView(.vertical, showsIndicators: false) {
+                    VStack(spacing: 14) {
+                        // Section 1: General
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("GENERAL SETTINGS")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundColor(.secondary)
 
-                        VStack(spacing: 10) {
-                            HStack {
-                                Label("Device Name", systemImage: "laptopcomputer")
-                                    .font(.subheadline)
-                                Spacer()
-                                Text(transferManager.deviceName)
-                                    .font(.system(size: 12, weight: .semibold, design: .rounded))
-                                    .foregroundColor(.primary)
-                                    .padding(.horizontal, 10)
-                                    .padding(.vertical, 4)
-                                    .background(Color.primary.opacity(0.06))
-                                    .cornerRadius(6)
-                            }
-
-                            Divider()
-                                .opacity(0.3)
-
-                            HStack {
-                                Label("Save Location", systemImage: "folder.fill")
-                                    .font(.subheadline)
-                                Spacer()
-                                VStack(alignment: .trailing, spacing: 2) {
-                                    Text((transferManager.downloadPath as NSString).lastPathComponent)
-                                        .font(.caption)
-                                        .bold()
-                                        .lineLimit(1)
-                                    Text(transferManager.downloadPath)
-                                        .font(.system(size: 9))
-                                        .foregroundColor(.secondary)
-                                        .lineLimit(1)
+                            VStack(spacing: 10) {
+                                HStack {
+                                    Label("Device Name", systemImage: "laptopcomputer")
+                                        .font(.subheadline)
+                                    Spacer()
+                                    Text(transferManager.deviceName)
+                                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                                        .foregroundColor(.primary)
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 4)
+                                        .background(Color.primary.opacity(0.06))
+                                        .cornerRadius(6)
                                 }
-                                Button("Browse...") {
-                                    transferManager.selectDownloadFolder()
+
+                                Divider()
+                                    .opacity(0.3)
+
+                                HStack {
+                                    Label("Save Location", systemImage: "folder.fill")
+                                        .font(.subheadline)
+                                    Spacer()
+                                    VStack(alignment: .trailing, spacing: 2) {
+                                        Text((transferManager.downloadPath as NSString).lastPathComponent)
+                                            .font(.caption)
+                                            .bold()
+                                            .lineLimit(1)
+                                        Text(transferManager.downloadPath)
+                                            .font(.system(size: 9))
+                                            .foregroundColor(.secondary)
+                                            .lineLimit(1)
+                                    }
+                                    Button("Browse...") {
+                                        transferManager.selectDownloadFolder()
+                                    }
+                                    .buttonStyle(.bordered)
+                                    .controlSize(.small)
                                 }
-                                .buttonStyle(.bordered)
-                                .controlSize(.small)
                             }
+                            .padding(12)
+                            .background(Color.primary.opacity(0.05))
+                            .cornerRadius(10)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                            )
                         }
-                        .padding(12)
-                        .background(Color.primary.opacity(0.05))
-                        .cornerRadius(10)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 10)
-                                .stroke(Color.white.opacity(0.1), lineWidth: 1)
-                        )
-                    }
 
-                    // Section 2: Automation & Shortcuts
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("AUTOMATION & SHORTCUTS")
-                            .font(.system(size: 10, weight: .bold))
-                            .foregroundColor(.secondary)
+                        // Section 2: Automation & Shortcuts
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("AUTOMATION & SHORTCUTS")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundColor(.secondary)
 
-                        VStack(spacing: 10) {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text("Global Shortcut")
-                                        .font(.subheadline)
-                                    Text("Open Grasp Menu Bar panel from anywhere")
-                                        .font(.caption2)
-                                        .foregroundColor(.secondary)
+                            VStack(spacing: 10) {
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text("Global Shortcut")
+                                            .font(.subheadline)
+                                        Text("Open Grasp Menu Bar panel from anywhere")
+                                            .font(.caption2)
+                                            .foregroundColor(.secondary)
+                                    }
+                                    Spacer()
+                                    Text("⌘ ⇧ G")
+                                        .font(.system(size: 11, weight: .bold, design: .monospaced))
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 4)
+                                        .background(GraspTheme.primary.opacity(0.2))
+                                        .foregroundColor(GraspTheme.accent)
+                                        .cornerRadius(6)
                                 }
-                                Spacer()
-                                Text("⌘ ⇧ G")
-                                    .font(.system(size: 11, weight: .bold, design: .monospaced))
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(Color.blue.opacity(0.2))
-                                    .foregroundColor(.blue)
-                                    .cornerRadius(6)
-                            }
 
-                            Divider()
-                                .opacity(0.3)
+                                Divider()
+                                    .opacity(0.3)
 
-                            HStack {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text("Auto-Accept Incoming Transfers")
-                                        .font(.subheadline)
-                                    Text("Skip PIN consent prompt and save files instantly")
-                                        .font(.caption2)
-                                        .foregroundColor(.secondary)
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text("Auto-Accept Incoming Transfers")
+                                            .font(.subheadline)
+                                        Text("Skip PIN consent prompt and save files instantly")
+                                            .font(.caption2)
+                                            .foregroundColor(.secondary)
+                                    }
+                                    Spacer()
+                                    Toggle("", isOn: $transferManager.autoAccept)
+                                        .toggleStyle(SwitchToggleStyle(tint: GraspTheme.primary))
                                 }
-                                Spacer()
-                                Toggle("", isOn: $transferManager.autoAccept)
-                                    .toggleStyle(SwitchToggleStyle(tint: .blue))
-                            }
 
-                            Divider()
-                                .opacity(0.3)
+                                Divider()
+                                    .opacity(0.3)
 
-                            HStack {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text("Play Completion Sound")
-                                        .font(.subheadline)
-                                    Text("Play system chime when file transfer finishes")
-                                        .font(.caption2)
-                                        .foregroundColor(.secondary)
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text("Play Completion Sound")
+                                            .font(.subheadline)
+                                        Text("Play system chime when file transfer finishes")
+                                            .font(.caption2)
+                                            .foregroundColor(.secondary)
+                                    }
+                                    Spacer()
+                                    Toggle("", isOn: $transferManager.soundEnabled)
+                                        .toggleStyle(SwitchToggleStyle(tint: GraspTheme.primary))
                                 }
-                                Spacer()
-                                Toggle("", isOn: $transferManager.soundEnabled)
-                                    .toggleStyle(SwitchToggleStyle(tint: .blue))
                             }
+                            .padding(12)
+                            .background(Color.primary.opacity(0.05))
+                            .cornerRadius(10)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                            )
                         }
-                        .padding(12)
-                        .background(Color.primary.opacity(0.05))
-                        .cornerRadius(10)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 10)
-                                .stroke(Color.white.opacity(0.1), lineWidth: 1)
-                        )
                     }
                 }
 
-                Spacer()
+                Divider()
+                    .opacity(0.4)
 
                 // Footer
                 HStack {
@@ -186,12 +189,13 @@ struct SettingsView: View {
                         dismiss()
                     }
                     .buttonStyle(.borderedProminent)
-                    .tint(.blue)
+                    .tint(GraspTheme.primary)
                     .controlSize(.regular)
                 }
             }
-            .padding(20)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 18)
         }
-        .frame(width: 420, height: 420)
+        .frame(width: 440, height: 490)
     }
 }
