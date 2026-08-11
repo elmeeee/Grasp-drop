@@ -44,7 +44,7 @@ It features a **native macOS Menu Bar app** with full **Android Quick Share (Nea
 Install Grasp as a native macOS application via Homebrew Cask:
 
 ```bash
-brew tap elmeeee/grasp-drop
+brew tap elmeeee/grasp-drop https://github.com/elmeeee/Grasp-drop.git
 brew install --cask grasp
 ```
 
