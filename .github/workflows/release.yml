@@ -33,6 +33,7 @@ jobs:
           ./build_mac_app.sh
           cd bin
           zip -r Grasp-macOS.zip Grasp.app
+          cp Grasp-macOS.zip Grasp.app.zip
 
       - name: Build Standalone Windows & Linux Binaries
         run: |
@@ -46,6 +47,7 @@ jobs:
           name: grasp-binaries
           path: |
             bin/Grasp-macOS.zip
+            bin/Grasp.app.zip
             bin/grasp-windows-x64.exe
             bin/grasp-linux-x64
 
@@ -55,6 +57,7 @@ jobs:
         with:
           files: |
             bin/Grasp-macOS.zip
+            bin/Grasp.app.zip
             bin/grasp-windows-x64.exe
             bin/grasp-linux-x64
         env:
