@@ -9,7 +9,7 @@ $InstallDir = "$env:LOCALAPPDATA\Grasp"
 $TargetExe = "$InstallDir\grasp.exe"
 
 Write-Host "==================================================" -ForegroundColor Cyan
-Write-Host "   🚀 Installing Grasp for Windows..." -ForegroundColor Cyan
+Write-Host "   Installing Grasp for Windows..." -ForegroundColor Cyan
 Write-Host "==================================================" -ForegroundColor Cyan
 
 New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null

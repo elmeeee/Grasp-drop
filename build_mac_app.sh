@@ -9,17 +9,18 @@ mkdir -p bin
 mkdir -p bin/Grasp.app/Contents/MacOS
 mkdir -p bin/Grasp.app/Contents/Resources
 
-echo "[1/3] Generating Icons..."
-if [ -f "/Users/phincon/.gemini/antigravity-ide/brain/2bbd33d1-60f5-4d3a-a1f9-bb83d8f296c0/scratch/render_icons.swift" ]; then
-    swift /Users/phincon/.gemini/antigravity-ide/brain/2bbd33d1-60f5-4d3a-a1f9-bb83d8f296c0/scratch/render_icons.swift .
+echo "[1/3] Packaging Resources & Icons..."
+if [ -d "Resources/AppIcon.iconset" ]; then
+    iconutil -c icns Resources/AppIcon.iconset -o Resources/AppIcon.icns
 fi
-iconutil -c icns AppIcon.iconset -o AppIcon.icns
-cp AppIcon.icns bin/Grasp.app/Contents/Resources/AppIcon.icns
-if [ -f "BarIcon.png" ]; then
-    cp BarIcon.png bin/Grasp.app/Contents/Resources/BarIcon.png
+if [ -f "Resources/AppIcon.icns" ]; then
+    cp Resources/AppIcon.icns bin/Grasp.app/Contents/Resources/AppIcon.icns
 fi
-if [ -f "BarIcon@2x.png" ]; then
-    cp BarIcon@2x.png bin/Grasp.app/Contents/Resources/BarIcon@2x.png
+if [ -f "Resources/BarIcon.png" ]; then
+    cp Resources/BarIcon.png bin/Grasp.app/Contents/Resources/BarIcon.png
+fi
+if [ -f "Resources/BarIcon@2x.png" ]; then
+    cp Resources/BarIcon@2x.png bin/Grasp.app/Contents/Resources/BarIcon@2x.png
 fi
 
 echo "[2/3] Compiling Native Swift Application with SPM..."

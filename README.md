@@ -27,7 +27,7 @@ It features a **native macOS Menu Bar app** with full **Android Quick Share (Nea
 
 ## Key Features
 
-- ⚡ **Zero Setup on Android**: Uses Android’s built-in **Quick Share (Nearby Share)** protocol over Bluetooth LE and local Wi-Fi. No Android apps needed!
+- **Zero Setup on Android**: Uses Android’s built-in **Quick Share (Nearby Share)** protocol over Bluetooth LE and local Wi-Fi. No Android apps needed!
 - **Instant Cross-Platform Web Hub**: Share files to and from **iPhone, iPad, Windows, and Linux** using a modern, responsive Web Portal with QR Code scanning.
 - **Bidirectional File Sharing**: Send files from your Mac to Android/Web devices or receive files seamlessly with real-time transfer progress.
 - **Privacy-First & 100% Local**: Files travel directly across your local Wi-Fi network with end-to-end encryption support. Zero cloud dependency.
