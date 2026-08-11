@@ -2,3 +2,9 @@
 .build/
 build_spm/
 .vscode/
+bin/Grasp.app
+bin/DropFile.app
+bin/LocalSend.app
+bin/grasp-windows-x64.exe
+bin/grasp-linux-x64
+bin/grasp-server

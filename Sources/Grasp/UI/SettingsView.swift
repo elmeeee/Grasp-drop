@@ -181,7 +181,7 @@ struct SettingsView: View {
 
                 // Footer
                 HStack {
-                    Text("Grasp v2.0 • KaMy Studio")
+                    Text("Grasp v1.0.0 • KaMy Studio")
                         .font(.caption2)
                         .foregroundColor(.secondary)
                     Spacer()
