@@ -253,3 +253,29 @@ struct WebShareModalView: View {
         return nil
     }
 }
+
+struct StepItem: View {
+    let number: String
+    let title: String
+    let desc: String
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Text(number)
+                .font(.system(size: 11, weight: .bold))
+                .foregroundColor(.white)
+                .frame(width: 18, height: 18)
+                .background(GraspTheme.primary)
+                .clipShape(Circle())
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text(title)
+                    .font(.system(size: 11, weight: .semibold))
+                Text(desc)
+                    .font(.system(size: 9))
+                    .foregroundColor(.secondary)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
