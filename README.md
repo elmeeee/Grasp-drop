@@ -55,18 +55,16 @@ Or download `Grasp.app` from the [Releases](https://github.com/elmeeee/Grasp-dro
 
 ### Windows (1-Line PowerShell Terminal Install)
 
-Run this single command in Windows PowerShell to install Grasp:
+Run this single command in **Windows PowerShell** to install Grasp:
 
 ```powershell
 iwr -useb https://raw.githubusercontent.com/elmeeee/Grasp-drop/main/install.ps1 | iex
 ```
 
-*This downloads `grasp.exe`, adds it to your User PATH, and allows you to type `grasp` in any terminal.*
+*This downloads `grasp-windows-x64.exe` as `grasp.exe`, adds it to your User PATH, and allows you to type `grasp` in any terminal.*
 
-Alternatively, install via Winget:
-```powershell
-winget install Grasp
-```
+> **Note on Winget**: Direct `winget install Grasp` requires submitting a manifest PR to `microsoft/winget-pkgs`. Until submitted, please use the 1-line PowerShell installer above or download `grasp-windows-x64.exe` directly from [Releases](https://github.com/elmeeee/Grasp-drop/releases).
+
 
 ---
 

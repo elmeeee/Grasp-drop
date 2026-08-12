@@ -1,8 +1,10 @@
 # Grasp — Windows 1-Line Terminal Installer
 # Usage in PowerShell:
-#   iwr -useb https://raw.githubusercontent.com/username/Grasp/main/install.ps1 | iex
+#   iwr -useb https://raw.githubusercontent.com/elmeeee/Grasp-drop/main/install.ps1 | iex
 
 $ErrorActionPreference = "Stop"
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls13
+
 $Version = "1.0.0"
 $Url = "https://github.com/elmeeee/Grasp-drop/releases/download/v$Version/grasp-windows-x64.exe"
 $InstallDir = "$env:LOCALAPPDATA\Grasp"
@@ -14,7 +16,7 @@ Write-Host "==================================================" -ForegroundColor
 
 New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
 Write-Host "Downloading executable from GitHub..." -ForegroundColor Yellow
-Invoke-WebRequest -Uri $Url -OutFile $TargetExe
+Invoke-WebRequest -Uri $Url -OutFile $TargetExe -UseBasicParsing
 
 # Add to User PATH if not present
 $UserPath = [Environment]::GetEnvironmentVariable("Path", "User")
@@ -27,3 +29,4 @@ Write-Host "--------------------------------------------------" -ForegroundColor
 Write-Host "✓ Grasp installed successfully!" -ForegroundColor Green
 Write-Host "  Type 'grasp' in any terminal to start the server." -ForegroundColor White
 Write-Host "==================================================" -ForegroundColor Cyan
+
