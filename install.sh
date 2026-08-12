@@ -23,6 +23,10 @@ case "$OS" in
   Darwin*)
     URL="https://github.com/elmeeee/Grasp-drop/releases/download/v$VERSION/grasp-server"
     ;;
+  MINGW*|MSYS*|CYGWIN*)
+    URL="https://github.com/elmeeee/Grasp-drop/releases/download/v$VERSION/grasp-windows-x64.exe"
+    TARGET="$INSTALL_DIR/grasp.exe"
+    ;;
   *)
     echo "Unsupported OS: $OS"
     exit 1
