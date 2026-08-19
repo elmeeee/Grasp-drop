@@ -42,8 +42,8 @@ struct WebShareModalView: View {
                                 .font(.system(size: 9, weight: .black))
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
-                                .background(GraspTheme.accent.opacity(0.2))
-                                .foregroundColor(GraspTheme.accent)
+                                .background(Color.primary.opacity(0.12))
+                                .foregroundColor(.primary)
                                 .clipShape(Capsule())
                         }
 
@@ -70,18 +70,9 @@ struct WebShareModalView: View {
                 // MARK: - QR Code Showcase Card
                 VStack(spacing: 12) {
                     ZStack {
-                        // Ambient Glowing Aura (Grasp Gradient)
+                        // Ambient Glowing Aura (Glass Aura)
                         RoundedRectangle(cornerRadius: 22, style: .continuous)
-                            .fill(
-                                LinearGradient(
-                                    colors: [
-                                        GraspTheme.primary.opacity(pulseGlow ? 0.4 : 0.2),
-                                        GraspTheme.accent.opacity(pulseGlow ? 0.4 : 0.2)
-                                    ],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
+                            .fill(Color.primary.opacity(pulseGlow ? 0.15 : 0.08))
                             .frame(width: 196, height: 196)
                             .blur(radius: pulseGlow ? 12 : 6)
 
@@ -106,7 +97,7 @@ struct WebShareModalView: View {
                                         .frame(width: 32, height: 32)
                                         .shadow(color: Color.black.opacity(0.15), radius: 3)
 
-                                    GraspBarIconView(size: 22, useGradient: true)
+                                    GraspBarIconView(size: 22, useGradient: false)
                                 }
                             }
                             .scaleEffect(qrScale)
@@ -151,7 +142,7 @@ struct WebShareModalView: View {
                 HStack(spacing: 8) {
                     Image(systemName: "globe")
                         .font(.system(size: 13, weight: .bold))
-                        .foregroundColor(GraspTheme.accent)
+                        .foregroundColor(.primary)
 
                     Text(activeURL)
                         .font(.system(size: 12, weight: .bold, design: .monospaced))
@@ -181,12 +172,10 @@ struct WebShareModalView: View {
                         }
                         .padding(.horizontal, 10)
                         .padding(.vertical, 5)
-                        .background(
-                            copied ? LinearGradient(colors: [.green, .teal], startPoint: .leading, endPoint: .trailing) : GraspTheme.gradient
-                        )
-                        .foregroundColor(.white)
+                        .background(Color.primary)
+                        .foregroundColor(Color(NSColor.windowBackgroundColor))
                         .cornerRadius(6)
-                        .shadow(color: GraspTheme.primary.opacity(0.3), radius: 4, x: 0, y: 2)
+                        .shadow(color: Color.black.opacity(0.15), radius: 4, x: 0, y: 2)
                     }
                     .buttonStyle(.plain)
                 }
@@ -196,7 +185,7 @@ struct WebShareModalView: View {
                 .cornerRadius(10)
                 .overlay(
                     RoundedRectangle(cornerRadius: 10)
-                        .stroke(GraspTheme.primary.opacity(0.15), lineWidth: 1)
+                        .stroke(Color.white.opacity(0.12), lineWidth: 1)
                 )
 
                 // MARK: - How it Works Steps

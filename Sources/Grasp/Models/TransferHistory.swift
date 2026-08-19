@@ -117,22 +117,6 @@ struct TransferItem: Identifiable, Codable, Equatable {
     }
     
     var iconColor: Color {
-        let ext = (fileName as NSString).pathExtension.lowercased()
-        switch ext {
-        case "jpg", "jpeg", "png", "gif", "heic", "webp", "svg":
-            return .purple
-        case "mp4", "mov", "mkv", "avi":
-            return .red
-        case "mp3", "m4a", "wav", "flac":
-            return .pink
-        case "pdf":
-            return .orange
-        case "zip", "tar", "gz", "7z", "rar":
-            return .yellow
-        case "apk":
-            return .green
-        default:
-            return .blue
-        }
+        return .primary
     }
 }

@@ -22,13 +22,12 @@ struct SettingsView: View {
                 HStack(spacing: 12) {
                     ZStack {
                         Circle()
-                            .fill(LinearGradient(colors: [GraspTheme.primary, GraspTheme.accent], startPoint: .topLeading, endPoint: .bottomTrailing))
+                            .fill(Color.primary.opacity(0.1))
                             .frame(width: 36, height: 36)
-                            .shadow(color: GraspTheme.primary.opacity(0.4), radius: 6, x: 0, y: 2)
 
                         Image(systemName: "gearshape.fill")
                             .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(.white)
+                            .foregroundColor(.primary)
                     }
 
                     VStack(alignment: .leading, spacing: 1) {
@@ -128,8 +127,8 @@ struct SettingsView: View {
                                         .font(.system(size: 11, weight: .bold, design: .monospaced))
                                         .padding(.horizontal, 8)
                                         .padding(.vertical, 4)
-                                        .background(GraspTheme.primary.opacity(0.2))
-                                        .foregroundColor(GraspTheme.accent)
+                                        .background(Color.primary.opacity(0.12))
+                                        .foregroundColor(.primary)
                                         .cornerRadius(6)
                                 }
 
@@ -146,7 +145,7 @@ struct SettingsView: View {
                                     }
                                     Spacer()
                                     Toggle("", isOn: $transferManager.autoAccept)
-                                        .toggleStyle(SwitchToggleStyle(tint: GraspTheme.primary))
+                                        .toggleStyle(SwitchToggleStyle(tint: .primary))
                                 }
 
                                 Divider()
@@ -162,7 +161,7 @@ struct SettingsView: View {
                                     }
                                     Spacer()
                                     Toggle("", isOn: $transferManager.soundEnabled)
-                                        .toggleStyle(SwitchToggleStyle(tint: GraspTheme.primary))
+                                        .toggleStyle(SwitchToggleStyle(tint: .primary))
                                 }
                             }
                             .padding(12)
@@ -189,7 +188,7 @@ struct SettingsView: View {
                         dismiss()
                     }
                     .buttonStyle(.borderedProminent)
-                    .tint(GraspTheme.primary)
+                    .tint(.primary)
                     .controlSize(.regular)
                 }
             }

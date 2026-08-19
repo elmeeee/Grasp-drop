@@ -87,7 +87,7 @@ struct MenuBarView: View {
                         set: { transferManager.toggleEngine($0) }
                     )
                 )
-                .toggleStyle(SwitchToggleStyle(tint: .blue))
+                .toggleStyle(SwitchToggleStyle(tint: .primary))
             }
             .padding(12)
             .background(
@@ -105,17 +105,17 @@ struct MenuBarView: View {
                     HStack(spacing: 8) {
                         ZStack {
                             Circle()
-                                .fill(Color.blue.opacity(0.2))
+                                .fill(Color.primary.opacity(0.1))
                                 .frame(width: 28, height: 28)
                             Image(systemName: "antenna.radiowaves.left.and.right")
                                 .font(.system(size: 13, weight: .bold))
-                                .foregroundColor(.blue)
+                                .foregroundColor(.primary)
                         }
 
                         VStack(alignment: .leading, spacing: 1) {
                             Text("INCOMING QUICK SHARE")
                                 .font(.system(size: 10, weight: .bold))
-                                .foregroundColor(.blue)
+                                .foregroundColor(.secondary)
                             Text(pending.deviceName)
                                 .font(.system(size: 13, weight: .semibold, design: .rounded))
                         }
@@ -126,7 +126,7 @@ struct MenuBarView: View {
                     HStack(spacing: 10) {
                         Image(systemName: "doc.fill")
                             .font(.system(size: 18))
-                            .foregroundColor(.blue)
+                            .foregroundColor(.primary)
 
                         VStack(alignment: .leading, spacing: 1) {
                             Text(pending.fileName)
@@ -155,16 +155,16 @@ struct MenuBarView: View {
                         VStack(alignment: .trailing, spacing: 2) {
                             Image(systemName: "checkmark.shield.fill")
                                 .font(.system(size: 14))
-                                .foregroundColor(.green)
+                                .foregroundColor(.secondary)
                             Text("Verify on sender device")
                                 .font(.system(size: 9, weight: .medium))
                                 .foregroundColor(.secondary)
                         }
                     }
                     .padding(8)
-                    .background(Color.blue.opacity(0.15))
+                    .background(Color.primary.opacity(0.06))
                     .cornerRadius(8)
-                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.blue.opacity(0.35), lineWidth: 1))
+                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.white.opacity(0.12), lineWidth: 1))
 
                     // Accept & Decline Action Buttons
                     HStack(spacing: 8) {
@@ -180,7 +180,7 @@ struct MenuBarView: View {
                             .padding(.vertical, 6)
                         }
                         .buttonStyle(.bordered)
-                        .tint(.red)
+                        .tint(.secondary)
 
                         Button(action: {
                             transferManager.acceptPendingTransferByID(pending.id)
@@ -194,19 +194,19 @@ struct MenuBarView: View {
                             .padding(.vertical, 6)
                         }
                         .buttonStyle(.borderedProminent)
-                        .tint(.blue)
+                        .tint(.primary)
                     }
                 }
                 .padding(12)
                 .background(
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(Color.blue.opacity(0.12))
+                        .fill(Color.primary.opacity(0.08))
                         .overlay(
                             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .stroke(LinearGradient(colors: [.blue.opacity(0.6), .cyan.opacity(0.4)], startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1.5)
+                                .stroke(Color.white.opacity(0.15), lineWidth: 1)
                         )
                 )
-                .shadow(color: Color.blue.opacity(0.25), radius: 8, x: 0, y: 4)
+                .shadow(color: Color.black.opacity(0.15), radius: 8, x: 0, y: 4)
             }
 
             // MARK: - Active Live Transfer Progress Card
@@ -214,10 +214,10 @@ struct MenuBarView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
                         Image(systemName: "arrow.down.circle.fill")
-                            .foregroundColor(.blue)
+                            .foregroundColor(.primary)
                         Text("RECEIVING FILE...")
                             .font(.system(size: 10, weight: .bold))
-                            .foregroundColor(.blue)
+                            .foregroundColor(.secondary)
                         Spacer()
                         Text(active.formattedSpeed)
                             .font(.system(size: 10, weight: .bold, design: .monospaced))
@@ -236,7 +236,7 @@ struct MenuBarView: View {
                                 .frame(height: 6)
 
                             RoundedRectangle(cornerRadius: 4)
-                                .fill(LinearGradient(colors: [.blue, .cyan], startPoint: .leading, endPoint: .trailing))
+                                .fill(Color.primary.opacity(0.8))
                                 .frame(width: geo.size.width * active.progressFraction, height: 6)
                         }
                     }
@@ -250,14 +250,14 @@ struct MenuBarView: View {
                         Button(action: { transferManager.cancelActiveTransfer() }) {
                             Text("Cancel")
                                 .font(.caption2)
-                                .foregroundColor(.red)
+                                .foregroundColor(.secondary)
                         }
                         .buttonStyle(.plain)
                     }
                 }
                 .padding(12)
-                .background(Color.blue.opacity(0.08))
-                .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.blue.opacity(0.3), lineWidth: 1))
+                .background(Color.primary.opacity(0.06))
+                .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.white.opacity(0.12), lineWidth: 1))
                 .cornerRadius(12)
             }
 
@@ -275,7 +275,7 @@ struct MenuBarView: View {
                     .padding(.vertical, 7)
                 }
                 .buttonStyle(.borderedProminent)
-                .tint(.blue)
+                .tint(.primary)
                 .help("Pick file(s) to publish on Web Hub & Quick Share")
 
                 HStack(spacing: 8) {
@@ -354,12 +354,16 @@ struct MenuBarView: View {
                                 }) {
                                     HStack(spacing: 10) {
                                         ZStack {
-                                            RoundedRectangle(cornerRadius: 8)
-                                                .fill(item.iconColor.opacity(0.15))
+                                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                                .fill(Color.primary.opacity(0.08))
+                                                .overlay(
+                                                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                                                )
                                                 .frame(width: 30, height: 30)
                                             Image(systemName: item.iconName)
-                                                .font(.system(size: 13))
-                                                .foregroundColor(item.iconColor)
+                                                .font(.system(size: 13, weight: .medium))
+                                                .foregroundColor(.primary)
                                         }
 
                                         VStack(alignment: .leading, spacing: 1) {
@@ -374,7 +378,7 @@ struct MenuBarView: View {
                                                 if item.isWebUpload {
                                                     Text("• Web")
                                                         .font(.system(size: 9, weight: .bold))
-                                                        .foregroundColor(.blue)
+                                                        .foregroundColor(.secondary)
                                                 }
                                             }
                                         }
