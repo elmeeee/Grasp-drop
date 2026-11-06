@@ -7,6 +7,7 @@
 //
 
 import Cocoa
+import Combine
 import SwiftUI
 import UserNotifications
 import NDHackery
@@ -48,7 +49,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     var statusItem: NSStatusItem!
     var panel: MenuBarPanel!
     var transferManager: TransferManager!
+    var statusIcon: OtterStatusIcon?
     private var eventMonitor: Any?
+    private var statusCancellables = Set<AnyCancellable>()
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         // Initialize State & Engine Manager
@@ -65,24 +68,43 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         // Setup Native Status Item in macOS Menu Bar
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         if let button = statusItem.button {
-            var iconImg: NSImage?
-            if let barIconUrl = Bundle.main.url(forResource: "otter-menubar", withExtension: "png"),
-               let customImg = NSImage(contentsOf: barIconUrl) {
-                iconImg = customImg
-            } else if let customImg = NSImage(named: "otter-menubar") {
-                iconImg = customImg
-            } else {
-                iconImg = NSImage(systemSymbolName: "arrow.down.to.line.circle.fill", accessibilityDescription: "Otter")
-            }
-            iconImg?.isTemplate = true
-            button.image = iconImg
+            statusIcon = OtterStatusIcon(button: button)
             button.toolTip = "Otter — Quick Share & Web Receiver"
             button.action = #selector(togglePanel)
             button.target = self
         }
+        observeStatus()
 
         setupNotificationCategories()
         setupGlobalHotkey()
+    }
+
+    /// Derives the menu bar state from the transfer manager and applies it.
+    /// `success` is triggered explicitly when a transfer finishes.
+    @MainActor private func observeStatus() {
+        let manager = transferManager!
+
+        Publishers.CombineLatest3(
+            manager.$currentPendingTransfer,
+            manager.$activeTransfer,
+            manager.$isRunning
+        )
+        .receive(on: RunLoop.main)
+        .sink { [weak self] pending, active, running in
+            guard let self, let icon = self.statusIcon else { return }
+            if active != nil {
+                icon.set(.transferring)
+            } else if pending != nil || !running {
+                icon.set(.waiting)
+            } else if icon.state != .success {
+                icon.set(.idle)
+            }
+        }
+        .store(in: &statusCancellables)
+
+        manager.onTransferCompleted = { [weak self] in
+            self?.statusIcon?.set(.success)
+        }
     }
 
     private func setupGlobalHotkey() {

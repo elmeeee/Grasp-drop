@@ -307,7 +307,7 @@ struct MenuBarView: View {
                 }
             }
 
-            // MARK: - Nearby Devices (LocalSend v2)
+            // MARK: - Nearby Devices
             VStack(alignment: .leading, spacing: 6) {
                 HStack {
                     HStack(spacing: 5) {
@@ -319,7 +319,7 @@ struct MenuBarView: View {
                             .foregroundColor(.secondary)
 
                         if transferManager.isOtterShareRunning {
-                            Text("LocalSend")
+                            Text("Otter")
                                 .font(.system(size: 8, weight: .bold))
                                 .padding(.horizontal, 5)
                                 .padding(.vertical, 1)

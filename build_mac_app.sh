@@ -16,10 +16,8 @@ fi
 if [ -f "Resources/AppIcon.icns" ]; then
     cp Resources/AppIcon.icns bin/Otter.app/Contents/Resources/AppIcon.icns
 fi
-for icon in otter-menubar.png otter-menubar@2x.png; do
-    if [ -f "Resources/Otter/$icon" ]; then
-        cp "Resources/Otter/$icon" "bin/Otter.app/Contents/Resources/$icon"
-    fi
+for icon in Resources/Otter/otter-menubar*.png Resources/Otter/otter-status-*.png; do
+    [ -f "$icon" ] && cp "$icon" "bin/Otter.app/Contents/Resources/$(basename "$icon")"
 done
 
 echo "[2/3] Compiling Native Swift Application with SPM..."

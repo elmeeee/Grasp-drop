@@ -50,6 +50,9 @@ class TransferManager: NSObject, ObservableObject, CBCentralManagerDelegate {
 
     weak var appDelegate: AnyObject?
 
+    /// Called on the main actor whenever a file transfer finishes successfully.
+    var onTransferCompleted: (() -> Void)?
+
     private var pendingRequests: [String: PendingTransfer] = [:]
     private var webServer: WebReceiverServer?
     private var centralManager: CBCentralManager?
@@ -203,11 +206,9 @@ class TransferManager: NSObject, ObservableObject, CBCentralManagerDelegate {
         Task {
             do {
                 try await sender.send(files: urls, to: peer) { _ in }
-                handleFileReceived(
-                    fileName: urls.first?.lastPathComponent ?? "File",
-                    fileSize: 0, isWeb: true)
+                onTransferCompleted?()
             } catch {
-                print("[LocalSend] Send failed: \(error.localizedDescription)")
+                print("[Otter] Send failed: \(error.localizedDescription)")
             }
         }
     }
@@ -430,6 +431,7 @@ extension TransferManager: MainAppDelegate {
                 let fname = self.activeTransfer?.fileName ?? "Received_File"
                 let size = self.activeTransfer?.totalBytes ?? 0
                 self.handleFileReceived(fileName: fname, fileSize: size, isWeb: false)
+                self.onTransferCompleted?()
             }
             self.activeTransfer = nil
             self.pendingRequests.removeValue(forKey: id)

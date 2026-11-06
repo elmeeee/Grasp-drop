@@ -211,7 +211,7 @@ final class OtterDiscovery: ObservableObject {
     }
 }
 
-/// Accepts the self-signed certificates used by LocalSend peers.
+/// Accepts the self-signed certificates used by Otter peers.
 final class SelfSignedDelegate: NSObject, URLSessionDelegate {
     func urlSession(
         _ session: URLSession,
