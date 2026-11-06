@@ -29,12 +29,24 @@
       {
         "from": "resources/bin",
         "to": "bin",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "win": {
-      "target": ["nsis", "portable"],
-      "artifactName": "Otter-${version}-${arch}.${ext}"
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "artifactName": "Otter-${version}-${arch}.${ext}",
+      "icon": "assets/icon.ico"
+    },
+    "mac": {
+      "icon": "../../Resources/AppIcon.icns"
+    },
+    "linux": {
+      "icon": "assets/icon.png"
     }
   }
 }

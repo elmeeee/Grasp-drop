@@ -141,3 +141,5 @@ html, body {
   max-width: 90%;
 }
 .toast.show { transform: translateX(-50%) translateY(0); }
+
+.logo img { width: 44px; height: 44px; border-radius: 12px; display: block; }

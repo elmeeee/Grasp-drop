@@ -1,5 +1,8 @@
 const { app, BrowserWindow } = require("electron");
 const path = require("path");
+
+const ICON_PATH = path.join(__dirname, "..", "assets", "icon.png");
+const ICON_WIN_PATH = path.join(__dirname, "..", "assets", "icon.ico");
 const { startCore, stopCore } = require("./core");
 
 let mainWindow = null;
@@ -12,6 +15,7 @@ async function createWindow() {
     minHeight: 600,
     backgroundColor: "#0b0f19",
     title: "Otter",
+    icon: process.platform === "win32" ? ICON_WIN_PATH : ICON_PATH,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
