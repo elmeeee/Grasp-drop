@@ -622,6 +622,9 @@ function openSettings() {
 // ---------------------------------------------------------------- wiring
 
 function wire() {
+  const bar = document.querySelector(".topbar-sticky");
+  window.addEventListener("scroll", () => bar.classList.toggle("scrolled", window.scrollY > 4), { passive: true });
+
   document.addEventListener("click", (event) => {
     const el = event.target.closest("[data-action]");
     if (!el) return;
