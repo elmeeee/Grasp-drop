@@ -44,3 +44,6 @@ app/android/keystore.properties
 
 # Release APK build output (distributed via the website, not git)
 bin/otter-android-release.apk
+
+# Play upload artifacts (rebuild from source, do not commit)
+play/*.aab
