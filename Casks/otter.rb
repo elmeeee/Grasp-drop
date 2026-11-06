@@ -1,21 +1,16 @@
 cask "otter" do
   version "1.0.0"
-  sha256 :no_check
+  sha256 "ba0ea38b5320bc131547bbd071200b37232ce697b64c27556fc72df04b2bd5cd"
 
-  url "https://github.com/elmeeee/Grasp-drop/releases/download/v#{version}/Otter-macOS.zip"
+  url "https://otterr.web.app/downloads/Otter-macOS.zip"
   name "Otter"
-  desc "macOS Quick Share Receiver & Cross-Platform File Hub"
-  homepage "https://github.com/elmeeee/Grasp-drop"
+  desc "Send files between your devices over local Wi-Fi"
+  homepage "https://otterr.web.app/"
+
+  depends_on :macos
+  container nested: "Otter.dmg"
 
   app "Otter.app"
 
-  postflight do
-    system_command "/usr/bin/xattr",
-                   args: ["-rd", "com.apple.quarantine", "#{appdir}/Otter.app"],
-                   sudo: false
-  end
-
-  zap trash: [
-    "~/Downloads/Otter",
-  ]
+  zap trash: "~/Downloads/Otter"
 end
