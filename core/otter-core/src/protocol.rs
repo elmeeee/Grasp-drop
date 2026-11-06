@@ -25,6 +25,15 @@ pub const DEVICE_WEB: &str = "web";
 pub const DEVICE_HEADLESS: &str = "headless";
 pub const DEVICE_SERVER: &str = "server";
 
+/// Device type reported to peers, derived from the platform this core runs on.
+fn local_device_type() -> &'static str {
+    if cfg!(target_os = "android") || cfg!(target_os = "ios") {
+        DEVICE_MOBILE
+    } else {
+        DEVICE_DESKTOP
+    }
+}
+
 /// Describes a device participating in the protocol.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct DeviceInfo {
@@ -52,7 +61,7 @@ impl DeviceInfo {
             alias: alias.into(),
             version: PROTOCOL_VERSION.to_string(),
             device_model: Some(std::env::consts::OS.to_string()),
-            device_type: Some(DEVICE_DESKTOP.to_string()),
+            device_type: Some(local_device_type().to_string()),
             fingerprint: fingerprint.into(),
             port: Some(DEFAULT_PORT),
             protocol: Some(SCHEME_HTTPS.to_string()),

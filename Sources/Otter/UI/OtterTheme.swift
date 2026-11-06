@@ -31,20 +31,18 @@ struct OtterTheme {
         )
     }
 
+    /// The Otter app icon, shown in the panel header and sheets. Uses the
+    /// full-resolution artwork (not the 16 px menu bar glyph) so it stays sharp.
     static func loadBarIconImage() -> NSImage? {
-        if let image = NSImage(named: "otter-menubar") {
+        if let image = NSImage(named: "otter-app-256") {
             return image
         }
-        let possiblePaths = [
-            Bundle.main.path(forResource: "otter-menubar@2x", ofType: "png"),
-            Bundle.main.path(forResource: "otter-menubar", ofType: "png"),
-            (Bundle.main.resourcePath as NSString?)?.appendingPathComponent("otter-menubar@2x.png"),
-            (Bundle.main.resourcePath as NSString?)?.appendingPathComponent("otter-menubar.png"),
-            "/Users/phincon/Documents/Project/Otter/BarIcon@2x.png",
-            "/Users/phincon/Documents/Project/Otter/BarIcon.png"
+        let candidates = [
+            Bundle.main.url(forResource: "otter-app-256", withExtension: "png"),
+            Bundle.main.resourceURL?.appendingPathComponent("otter-app-256.png"),
         ]
-        for path in possiblePaths.compactMap({ $0 }) {
-            if FileManager.default.fileExists(atPath: path), let img = NSImage(contentsOfFile: path) {
+        for url in candidates.compactMap({ $0 }) {
+            if FileManager.default.fileExists(atPath: url.path), let img = NSImage(contentsOf: url) {
                 return img
             }
         }

@@ -16,7 +16,7 @@ fi
 if [ -f "Resources/AppIcon.icns" ]; then
     cp Resources/AppIcon.icns bin/Otter.app/Contents/Resources/AppIcon.icns
 fi
-for icon in Resources/Otter/otter-menubar*.png Resources/Otter/otter-status-*.png; do
+for icon in Resources/Otter/otter-menubar*.png Resources/Otter/otter-status-*.png Resources/Otter/otter-app-256.png; do
     [ -f "$icon" ] && cp "$icon" "bin/Otter.app/Contents/Resources/$(basename "$icon")"
 done
 

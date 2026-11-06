@@ -128,7 +128,7 @@ async function startService() {
     return;
   }
   try {
-    const result = await OtterNative.start({ alias: "Otter Desktop" });
+    const result = await OtterNative.start({});
     state.running = true;
     els.alias.textContent = result.alias || "Otter Device";
     toast("Visible on the network");
@@ -193,6 +193,7 @@ async function saveFile(name) {
   try {
     const result = await OtterNative.saveReceivedFile({ name });
     toast(result.savedTo ? `Saved to ${result.savedTo}` : "File saved");
+    refreshFiles();
   } catch (error) {
     toast(`Save failed: ${error.message || error}`);
   }
