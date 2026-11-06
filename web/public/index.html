@@ -4,16 +4,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Otter — Send files between your devices</title>
-  <meta name="description" content="Otter sends files between your Mac, Windows, Linux, and Android devices over your local Wi-Fi. No cloud, no account, no internet needed." />
+  <meta name="description" content="Otter sends files between your Mac, Windows, Linux, and Android devices over your local Wi-Fi. No cloud, no account." />
   <meta property="og:title" content="Otter — Send files between your devices" />
   <meta property="og:description" content="Fast, private file sharing over your local Wi-Fi. No cloud, no account." />
   <meta property="og:image" content="/assets/otter-icon-512.png" />
-  <meta name="theme-color" content="#0A0F1A" />
+  <meta name="theme-color" content="#070B14" />
   <link rel="icon" type="image/png" sizes="64x64" href="/assets/favicon-64.png" />
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
-  <link rel="stylesheet" href="/styles.css" />
+  <link rel="stylesheet" href="/styles.css?v=4" />
 </head>
 <body>
+
+<div class="grid-floor" aria-hidden="true"></div>
 
 <header class="nav">
   <div class="container nav-inner">
@@ -23,9 +25,9 @@
     </a>
     <nav class="nav-links" aria-label="Primary">
       <a href="#features">Features</a>
+      <a href="#how">How it works</a>
       <a href="#download">Download</a>
       <a href="#install">Install</a>
-      <a href="#faq">FAQ</a>
     </nav>
     <a class="btn btn-primary btn-sm" href="#download">Download</a>
   </div>
@@ -33,275 +35,285 @@
 
 <main id="top">
 
+  <!-- ============ HERO ============ -->
   <section class="hero">
     <div class="container hero-grid">
-      <div class="hero-copy">
+      <div class="hero-copy reveal">
         <span class="pill"><span class="dot"></span> Version 1.0.0 · Open source</span>
-        <h1>Send files between<br />your devices.</h1>
+        <h1>Send files between<br />your <span class="accent">devices.</span></h1>
         <p class="lead">
           Otter moves photos, videos, and documents between your Mac, Windows PC,
-          Linux machine, and Android phone over your local Wi-Fi. No cloud. No account.
-          Your files never leave your network.
+          Linux machine, and Android phone over your local Wi-Fi.
+          No cloud. No account. Your files never leave your network.
         </p>
         <div class="cta">
           <a class="btn btn-primary" href="#download">Download Otter</a>
-          <a class="btn btn-ghost" href="#install">How to install</a>
+          <a class="btn btn-ghost" href="#how">See how it works</a>
         </div>
         <div class="brew">
           <span class="brew-label">macOS · Homebrew</span>
-          <code id="brew-cmd">brew tap elmeeee/grasp-drop https://github.com/elmeeee/Grasp-drop.git && brew install --cask otter</code>
+          <code id="brew-cmd">brew tap elmeeee/grasp-drop https://github.com/elmeeee/Grasp-drop.git &amp;&amp; brew install --cask otter</code>
           <button class="copy" type="button" data-copy="brew-cmd" aria-label="Copy command">Copy</button>
         </div>
-        <ul class="hero-points">
-          <li>Live progress for every transfer</li>
-          <li>Images go straight to your Gallery</li>
-          <li>Encrypted with HTTPS on your LAN</li>
-        </ul>
       </div>
 
-      <div class="hero-visual" aria-hidden="true">
-        <div class="phone">
-          <img src="/assets/app-screenshot.jpg" alt="Otter app on Android showing live activity and nearby devices" width="720" height="1600" />
+      <div class="scene-wrap" aria-hidden="true">
+        <div class="scene" id="scene">
+          <!-- transfer arc between the laptop and the phone -->
+          <svg class="arc" viewBox="0 0 520 520" fill="none">
+            <path class="arc-track" d="M120 380 C 150 170, 370 170, 400 300" />
+            <path class="arc-flow" d="M120 380 C 150 170, 370 170, 400 300" />
+            <circle class="arc-dot" r="7"><animateMotion dur="3.6s" repeatCount="indefinite" path="M120 380 C 150 170, 370 170, 400 300" /></circle>
+            <circle class="arc-dot arc-dot-2" r="5"><animateMotion dur="3.6s" begin="-1.8s" repeatCount="indefinite" path="M400 300 C 370 170, 150 170, 120 380" /></circle>
+          </svg>
+
+          <!-- 3D phone -->
+          <div class="phone3d" id="phone">
+            <div class="face front"><img src="/assets/app-screenshot.jpg" alt="" /></div>
+            <div class="face back"><img src="/assets/otter-icon-512.png" alt="" /></div>
+            <div class="face side left"></div>
+            <div class="face side right"></div>
+            <div class="face side top"></div>
+            <div class="face side bottom"></div>
+          </div>
+
+          <!-- 3D laptop base -->
+          <div class="laptop3d">
+            <div class="lid"><div class="lid-screen"><img src="/assets/otter-icon-256.png" alt="" /></div></div>
+            <div class="base"></div>
+          </div>
+
+          <!-- floating cards at depth -->
+          <div class="float3d f-recv">
+            <span class="badge primary"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></span>
+            <div><strong>Receiving</strong><small>holiday.mp4 · 64%</small>
+              <i class="meter"><b></b></i></div>
+          </div>
+          <div class="float3d f-saved">
+            <span class="badge success"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+            <div><strong>Saved to Gallery</strong><small>Pictures/Otter</small></div>
+          </div>
+          <div class="float3d f-speed">
+            <small>Speed</small>
+            <strong>19.2 <span>MB/s</span></strong>
+          </div>
         </div>
-        <div class="float float-a">
-          <span class="badge primary"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></span>
-          <div><strong>Receiving</strong><small>holiday.mp4 · 64%</small></div>
-        </div>
-        <div class="float float-b">
-          <span class="badge success"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
-          <div><strong>Saved to Gallery</strong><small>Pictures/Otter</small></div>
-        </div>
+      </div>
+    </div>
+
+    <div class="ticker" aria-label="Supported platforms">
+      <div class="ticker-track">
+        <span>macOS</span><i></i><span>Windows</span><i></i><span>Linux</span><i></i><span>Android</span><i></i><span>Any browser</span><i></i>
+        <span>macOS</span><i></i><span>Windows</span><i></i><span>Linux</span><i></i><span>Android</span><i></i><span>Any browser</span><i></i>
       </div>
     </div>
   </section>
 
-  <section class="platforms" aria-label="Supported platforms">
-    <div class="container platform-row">
-      <span>macOS</span><span class="sep">·</span>
-      <span>Windows</span><span class="sep">·</span>
-      <span>Linux</span><span class="sep">·</span>
-      <span>Android</span><span class="sep">·</span>
-      <span>Any browser (web hub)</span>
-    </div>
-  </section>
-
+  <!-- ============ FEATURES ============ -->
   <section class="section" id="features">
     <div class="container">
-      <div class="section-head">
+      <div class="section-head reveal">
         <p class="eyebrow">Features</p>
-        <h2>Everything you need, nothing you don't.</h2>
-        <p>Otter is built for the moment you need to get a file from one device to another, right now.</p>
+        <h2>Everything you need.<br />Nothing you don't.</h2>
+        <p>Built for the moment you need a file on another device, right now.</p>
       </div>
 
       <div class="feature-grid">
-        <article class="feature">
+        <article class="card tilt reveal" style="--d:0">
           <span class="feature-icon primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span>
           <h3>Live activity</h3>
-          <p>Watch every transfer as it happens, with progress, speed, and an ongoing notification on Android.</p>
+          <p>Watch every transfer with progress and speed. Android keeps it in the notification shade.</p>
         </article>
-        <article class="feature">
+        <article class="card tilt reveal" style="--d:1">
           <span class="feature-icon primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20"/><path d="M12 2a15 15 0 0 0 0 20"/></svg></span>
           <h3>Nearby discovery</h3>
           <p>Devices on the same Wi-Fi find each other automatically. No pairing codes, no setup.</p>
         </article>
-        <article class="feature">
+        <article class="card tilt reveal" style="--d:2">
           <span class="feature-icon success"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></span>
           <h3>Gallery-ready</h3>
-          <p>Received photos and videos are saved straight into your Gallery, not buried in a download folder.</p>
+          <p>Photos and videos go straight into your Gallery, not buried in a download folder.</p>
         </article>
-        <article class="feature">
+        <article class="card tilt reveal" style="--d:0">
           <span class="feature-icon primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
           <h3>Private by design</h3>
           <p>Transfers run over HTTPS between your own devices. Each device has its own certificate fingerprint.</p>
         </article>
-        <article class="feature">
+        <article class="card tilt reveal" style="--d:1">
           <span class="feature-icon success"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg></span>
           <h3>Clean history</h3>
-          <p>Every sent and received file is listed with its status. Clear the history whenever you want.</p>
+          <p>Every sent and received file is listed with its status. Clear it whenever you want.</p>
         </article>
-        <article class="feature">
+        <article class="card tilt reveal" style="--d:2">
           <span class="feature-icon primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></span>
           <h3>Web hub</h3>
-          <p>No app on the other device? Open the address Otter shows in any browser and send files from there.</p>
+          <p>No app on the other device? Open the address Otter shows in any browser and send from there.</p>
         </article>
       </div>
     </div>
   </section>
 
+  <!-- ============ HOW IT WORKS ============ -->
   <section class="section section-alt" id="how">
     <div class="container">
-      <div class="section-head">
+      <div class="section-head reveal">
         <p class="eyebrow">How it works</p>
         <h2>Three steps. Under a minute.</h2>
       </div>
       <ol class="steps">
-        <li>
+        <li class="step reveal" style="--d:0">
+          <div class="step-visual step-1" aria-hidden="true">
+            <span class="sv-device"></span><span class="sv-device sv-b"></span>
+          </div>
           <span class="step-num">1</span>
           <h3>Install Otter</h3>
           <p>Get the app for each device. It runs quietly in the menu bar, tray, or background.</p>
         </li>
-        <li>
+        <li class="step reveal" style="--d:1">
+          <div class="step-visual step-2" aria-hidden="true">
+            <span class="wifi"><i></i><i></i><i></i></span>
+          </div>
           <span class="step-num">2</span>
-          <h3>Make sure you're on one Wi-Fi</h3>
-          <p>Both devices need to be on the same network. Otter shows the others as Nearby Devices.</p>
+          <h3>Join one Wi-Fi</h3>
+          <p>Both devices need to be on the same network. The others appear as Nearby Devices.</p>
         </li>
-        <li>
+        <li class="step reveal" style="--d:2">
+          <div class="step-visual step-3" aria-hidden="true">
+            <span class="file3d"><i class="line l1"></i><i class="line l2"></i><i class="line l3"></i></span>
+            <span class="arrow3d"></span>
+          </div>
           <span class="step-num">3</span>
           <h3>Pick a device and send</h3>
-          <p>Choose your files. Watch progress live. Save what you received with one tap.</p>
+          <p>Choose files, watch progress live, and save what you receive with one tap.</p>
         </li>
       </ol>
     </div>
   </section>
 
+  <!-- ============ DOWNLOAD ============ -->
   <section class="section" id="download">
     <div class="container">
-      <div class="section-head">
+      <div class="section-head reveal">
         <p class="eyebrow">Download</p>
         <h2>Get Otter for your devices.</h2>
-        <p>Version 1.0.0. Checksums are listed so you can verify each file.</p>
+        <p>Version 1.0.0. Each file lists its SHA-256 so you can verify it.</p>
       </div>
 
       <div class="download-grid">
-        <article class="download">
+        <article class="download tilt reveal" style="--d:0">
           <div class="download-top">
             <span class="platform-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></span>
-            <div>
-              <h3>macOS</h3>
-              <small>macOS 13 or later · Apple Silicon and Intel</small>
-            </div>
+            <div><h3>macOS</h3><small>macOS 13 or later · Apple Silicon &amp; Intel</small></div>
           </div>
           <a class="btn btn-primary block" href="/downloads/Otter-macOS.zip" download>Download for macOS <span class="muted">5.9 MB · zip</span></a>
-          <p class="download-alt">Unzip, then open <code class="inline">Otter.dmg</code> and drag Otter to Applications. Or install with Homebrew:</p>
-          <code class="inline">brew tap elmeeee/grasp-drop https://github.com/elmeeee/Grasp-drop.git && brew install --cask otter</code>
-          <details class="sum">
-            <summary>SHA-256</summary>
-            <code>ba0ea38b5320bc131547bbd071200b37232ce697b64c27556fc72df04b2bd5cd</code>
-          </details>
+          <p class="download-alt">Unzip, open <code class="inline">Otter.dmg</code>, and drag Otter to Applications. Or use Homebrew.</p>
+          <details class="sum"><summary>SHA-256</summary><code>ba0ea38b5320bc131547bbd071200b37232ce697b64c27556fc72df04b2bd5cd</code></details>
         </article>
 
-        <article class="download">
+        <article class="download tilt reveal" style="--d:1">
           <div class="download-top">
             <span class="platform-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></span>
-            <div>
-              <h3>Android</h3>
-              <small>Android 10 or later · tested on Android 13</small>
-            </div>
+            <div><h3>Android</h3><small>Android 10 or later · tested on Android 13</small></div>
           </div>
-          <a class="btn btn-primary block" href="/downloads/Otter-android.zip" download>Download for Android <span class="muted">13.0 MB · zip</span></a>
-          <p class="download-alt">Unzip on your phone, then open <code class="inline">Otter-android.apk</code> and allow installs when asked.</p>
-          <details class="sum">
-            <summary>SHA-256</summary>
-            <code>4c65f75c3c679eb1f76b71551b7b401ebf640e761cfb3025346a6f1d571e98cd</code>
-          </details>
+          <a class="btn btn-primary block" href="/downloads/Otter-android.zip" download>Download for Android <span class="muted">11.7 MB · zip</span></a>
+          <p class="download-alt">Unzip, open <code class="inline">Otter-android.apk</code>, and allow the install when asked.</p>
+          <details class="sum"><summary>SHA-256</summary><code>8eb8b5d18d9e80d99ef8d0250d31b6004fb7d8186d1a181ce48de27214d83822</code></details>
         </article>
 
-        <article class="download">
+        <article class="download tilt reveal" style="--d:2">
           <div class="download-top">
             <span class="platform-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8"/><rect x="13" y="3" width="8" height="8"/><rect x="3" y="13" width="8" height="8"/><rect x="13" y="13" width="8" height="8"/></svg></span>
-            <div>
-              <h3>Windows</h3>
-              <small>Windows · 64-bit</small>
-            </div>
+            <div><h3>Windows</h3><small>Windows · 64-bit</small></div>
           </div>
           <a class="btn btn-primary block" href="/downloads/Otter-windows-cli.zip" download>Download for Windows <span class="muted">5.1 MB · zip</span></a>
-          <p class="download-alt">Command-line build in a zip. Unzip it and run <code class="inline">otter.exe</code> in a terminal to receive and send files. A desktop app for Windows is in progress.</p>
-          <details class="sum">
-            <summary>SHA-256</summary>
-            <code>85e80d065564923a0ed3e642e07bbe5203e19d58c2116ccc21d64fa3d0cefcca</code>
-          </details>
+          <p class="download-alt">Command-line build. Unzip and run <code class="inline">otter.exe</code>. A desktop app is in progress.</p>
+          <details class="sum"><summary>SHA-256</summary><code>85e80d065564923a0ed3e642e07bbe5203e19d58c2116ccc21d64fa3d0cefcca</code></details>
         </article>
 
-        <article class="download">
+        <article class="download tilt reveal" style="--d:3">
           <div class="download-top">
             <span class="platform-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg></span>
-            <div>
-              <h3>Linux</h3>
-              <small>Linux · 64-bit (x86_64)</small>
-            </div>
+            <div><h3>Linux</h3><small>Linux · 64-bit (x86_64)</small></div>
           </div>
           <a class="btn btn-ghost block" href="/downloads/Otter-linux-x64.zip" download>Download for Linux <span class="muted">2.4 MB · zip</span></a>
-          <p class="download-alt">Unzip, make it executable, then run it: <code class="inline">unzip Otter-linux-x64.zip &amp;&amp; chmod +x Otter-linux-x64 &amp;&amp; ./Otter-linux-x64</code></p>
+          <p class="download-alt">Unzip, then run <code class="inline">chmod +x Otter-linux-x64 &amp;&amp; ./Otter-linux-x64</code>.</p>
+          <details class="sum"><summary>SHA-256</summary><code>5fcfc92964ae335c8961debcbaece6b990568bfd99e84d722e4760806890aac3</code></details>
         </article>
       </div>
     </div>
   </section>
 
+  <!-- ============ INSTALL ============ -->
   <section class="section section-alt" id="install">
     <div class="container">
-      <div class="section-head">
+      <div class="section-head reveal">
         <p class="eyebrow">Install</p>
-        <h2>Step-by-step, per platform.</h2>
-        <p>Your system may warn about apps from outside its store. Otter is safe to run; these steps tell your system so.</p>
+        <h2>Step by step.</h2>
+        <p>Your system may warn about apps from outside its store. These steps tell it Otter is safe to run.</p>
       </div>
 
       <div class="install-grid">
-        <details class="install" open>
+        <details class="install reveal" open>
           <summary>macOS</summary>
           <ol>
-            <li>Unzip <code class="inline">Otter-macOS.zip</code> and open <code class="inline">Otter.dmg</code>, then drag Otter into Applications. <strong>Or Homebrew:</strong> run <code class="inline">brew tap elmeeee/grasp-drop https://github.com/elmeeee/Grasp-drop.git && brew install --cask otter</code>. </li>
-            <li>The first time, macOS may say the app can't be checked. Right-click <em>Otter</em> in Applications, choose <em>Open</em>, then <em>Open</em> again.</li>
+            <li>Unzip <code class="inline">Otter-macOS.zip</code>, open <code class="inline">Otter.dmg</code>, and drag Otter into Applications.</li>
+            <li>The first time, right-click <em>Otter</em> in Applications, choose <em>Open</em>, then <em>Open</em> again.</li>
             <li>Allow Local Network and Notifications when asked. Otter appears in the menu bar.</li>
+            <li><strong>Or Homebrew:</strong> <code class="inline">brew tap elmeeee/grasp-drop https://github.com/elmeeee/Grasp-drop.git &amp;&amp; brew install --cask otter</code></li>
           </ol>
         </details>
-
-        <details class="install">
+        <details class="install reveal">
           <summary>Android</summary>
           <ol>
-            <li>Unzip <code class="inline">Otter-android.zip</code> on the phone and open <code class="inline">Otter-android.apk</code>.</li>
+            <li>Unzip <code class="inline">Otter-android.zip</code> and open <code class="inline">Otter-android.apk</code>.</li>
             <li>If prompted, allow installs from your browser or file manager.</li>
             <li>Allow notifications when Otter asks. This shows live transfer progress.</li>
           </ol>
         </details>
-
-        <details class="install">
+        <details class="install reveal">
           <summary>Windows</summary>
           <ol>
             <li>Unzip <code class="inline">Otter-windows-cli.zip</code>. It contains <code class="inline">otter.exe</code>.</li>
-            <li>Open a terminal in that folder and run <code class="inline">otter.exe</code>. Allow access on private networks when Windows Firewall asks.</li>
-            <li>To send a file: <code class="inline">otter.exe --send 192.168.1.42 photo.jpg</code>.</li>
+            <li>Open a terminal in that folder and run <code class="inline">otter.exe</code>. Allow private network access when Windows Firewall asks.</li>
+            <li>To send: <code class="inline">otter.exe --send 192.168.1.42 photo.jpg</code></li>
           </ol>
         </details>
-
-        <details class="install">
+        <details class="install reveal">
           <summary>Linux</summary>
           <ol>
             <li>Unzip <code class="inline">Otter-linux-x64.zip</code> and run <code class="inline">chmod +x Otter-linux-x64</code>.</li>
-            <li>Start it with <code class="inline">./Otter-linux-x64</code>. Open UDP and TCP port 53317 and TCP 7456 if a firewall is active.</li>
+            <li>Start it with <code class="inline">./Otter-linux-x64</code>. Open UDP and TCP port 53317, and TCP 7456, if a firewall is active.</li>
           </ol>
         </details>
       </div>
 
-      <div class="note">
+      <div class="note reveal">
         <strong>Network tip:</strong> both devices must be on the same Wi-Fi, and the router must not isolate clients (AP isolation). Guest networks often block device-to-device traffic.
       </div>
     </div>
   </section>
 
+  <!-- ============ FAQ ============ -->
   <section class="section" id="faq">
     <div class="container narrow">
-      <div class="section-head">
+      <div class="section-head reveal">
         <p class="eyebrow">FAQ</p>
         <h2>Questions</h2>
       </div>
       <div class="faq">
-        <details>
+        <details class="reveal">
           <summary>Does Otter need the internet?</summary>
-          <p>No. Files go directly from one device to another over your local network. An internet connection is not needed.</p>
+          <p>No. Files go directly from one device to another over your local network.</p>
         </details>
-        <details>
+        <details class="reveal">
           <summary>Is my data uploaded anywhere?</summary>
-          <p>No. Otter has no cloud service and no account. Files are never sent to our servers.</p>
+          <p>No. Otter has no cloud service and no account. Files never reach our servers.</p>
         </details>
-        <details>
+        <details class="reveal">
           <summary>Can I send to an iPhone or iPad?</summary>
-          <p>Yes, through the web hub. Open the address Otter shows in Safari on the device and upload or download files from there.</p>
+          <p>Yes, through the web hub. Open the address Otter shows in Safari on the device and upload or download there.</p>
         </details>
-        <details>
-          <summary>Is Otter compatible with LocalSend?</summary>
-          <p>No. Otter uses its own protocol, which is modelled on the same idea. Otter devices talk to other Otter devices.</p>
-        </details>
-        <details>
+        <details class="reveal">
           <summary>Where do received files go?</summary>
           <p>On Mac, into <code class="inline">~/Downloads/Otter</code>. On Android, photos and videos go to your Gallery and other files to Downloads when you tap Save.</p>
         </details>
@@ -322,19 +334,6 @@
   </div>
 </footer>
 
-<script>
-  document.querySelectorAll("[data-copy]").forEach((button) => {
-    button.addEventListener("click", async () => {
-      const text = document.getElementById(button.dataset.copy).textContent.trim();
-      try {
-        await navigator.clipboard.writeText(text);
-        button.textContent = "Copied";
-      } catch (_) {
-        button.textContent = "Select & copy";
-      }
-      setTimeout(() => (button.textContent = "Copy"), 1600);
-    });
-  });
-</script>
+<script src="/script.js?v=4"></script>
 </body>
 </html>

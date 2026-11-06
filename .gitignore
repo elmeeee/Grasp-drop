@@ -37,3 +37,7 @@ web/public/downloads/
 
 # Firebase local cache
 .firebase/
+
+# Release signing (never commit)
+app/android/keystore.properties
+*.jks
