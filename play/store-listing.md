@@ -46,7 +46,7 @@ Everything below is copy-ready for Play Console.
 ## Graphics (in play/graphics and play/screenshots)
 - App icon, 512 × 512 PNG: play/graphics/icon-512.png
 - Feature graphic, 1024 × 500 PNG: play/graphics/feature-1024x500.png
-- Phone screenshots, 1080 × 2400 PNG: play/screenshots/01-home.png, 02-web-hub.png
+- Phone screenshots, 1080 × 2160 PNG (2:1, within Play's limit): play/screenshots/store/01–06 (hero, live activity, send, inbox, toast, browser access). Built with play/render/compose_3d.py from UI renders (play/render/render_shots.py).
 
 ## App content
 **Privacy policy:** https://otterr.web.app/privacy
