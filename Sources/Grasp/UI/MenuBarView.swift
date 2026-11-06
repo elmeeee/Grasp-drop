@@ -307,6 +307,90 @@ struct MenuBarView: View {
                 }
             }
 
+            // MARK: - Nearby Devices (LocalSend v2)
+            VStack(alignment: .leading, spacing: 6) {
+                HStack {
+                    HStack(spacing: 5) {
+                        Image(systemName: "antenna.radiowaves.left.and.right")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundColor(.secondary)
+                        Text("NEARBY DEVICES")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundColor(.secondary)
+
+                        if transferManager.isGraspShareRunning {
+                            Text("LocalSend")
+                                .font(.system(size: 8, weight: .bold))
+                                .padding(.horizontal, 5)
+                                .padding(.vertical, 1)
+                                .background(Color.primary.opacity(0.12))
+                                .foregroundColor(.primary)
+                                .clipShape(Capsule())
+                        }
+                    }
+
+                    Spacer()
+
+                    Button(action: { transferManager.scanForNearbyPeers() }) {
+                        Image(systemName: "arrow.clockwise")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundColor(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                    .help("Scan local network")
+                }
+
+                if transferManager.nearbyPeers.isEmpty {
+                    Text("Searching for devices on your Wi-Fi...")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.vertical, 8)
+                        .background(Color.primary.opacity(0.04))
+                        .cornerRadius(8)
+                } else {
+                    VStack(spacing: 6) {
+                        ForEach(transferManager.nearbyPeers) { peer in
+                            Button(action: {
+                                transferManager.selectAndSendNearbyFiles(to: peer)
+                            }) {
+                                HStack(spacing: 10) {
+                                    ZStack {
+                                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                            .fill(Color.primary.opacity(0.08))
+                                            .frame(width: 28, height: 28)
+                                        Image(systemName: peerIcon(peer))
+                                            .font(.system(size: 12, weight: .medium))
+                                            .foregroundColor(.primary)
+                                    }
+
+                                    VStack(alignment: .leading, spacing: 1) {
+                                        Text(peer.displayName)
+                                            .font(.caption)
+                                            .bold()
+                                            .lineLimit(1)
+                                        Text(peer.ip)
+                                            .font(.system(size: 9))
+                                            .foregroundColor(.secondary)
+                                    }
+
+                                    Spacer()
+
+                                    Image(systemName: "paperplane.fill")
+                                        .font(.system(size: 13))
+                                        .foregroundColor(.secondary)
+                                }
+                                .padding(6)
+                                .background(Color.primary.opacity(0.05))
+                                .cornerRadius(8)
+                            }
+                            .buttonStyle(.plain)
+                            .help("Send file(s) to \(peer.displayName)")
+                        }
+                    }
+                }
+            }
+
             Divider()
                 .opacity(0.4)
 
@@ -451,6 +535,15 @@ struct MenuBarView: View {
         }
         .sheet(isPresented: $showingSettingsModal) {
             SettingsView(transferManager: transferManager)
+        }
+    }
+
+    private func peerIcon(_ peer: GraspPeer) -> String {
+        switch peer.info.deviceType {
+        case GraspProtocol.deviceMobile: return "iphone"
+        case GraspProtocol.deviceDesktop: return "desktopcomputer"
+        case GraspProtocol.deviceWeb: return "globe"
+        default: return "laptopcomputer"
         }
     }
 }

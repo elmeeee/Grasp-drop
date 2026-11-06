@@ -21,7 +21,7 @@ case "$OS" in
     URL="https://github.com/elmeeee/Grasp-drop/releases/download/v$VERSION/grasp-linux-x64"
     ;;
   Darwin*)
-    URL="https://github.com/elmeeee/Grasp-drop/releases/download/v$VERSION/grasp-server"
+    URL="https://github.com/elmeeee/Grasp-drop/releases/download/v$VERSION/grasp-macos"
     ;;
   MINGW*|MSYS*|CYGWIN*)
     URL="https://github.com/elmeeee/Grasp-drop/releases/download/v$VERSION/grasp-windows-x64.exe"

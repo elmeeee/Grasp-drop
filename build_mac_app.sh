@@ -29,7 +29,12 @@ swift build --build-path ./build_spm
 echo "[3/3] Packaging Grasp.app Bundle..."
 APP_DIR="bin/Grasp.app"
 
-cp build_spm/arm64-apple-macosx/debug/GraspExecutable "$APP_DIR/Contents/MacOS/Grasp"
+BIN_PATH="$(find build_spm -name GraspExecutable -type f | head -n 1)"
+if [ -z "$BIN_PATH" ]; then
+    echo "ERROR: GraspExecutable not found under build_spm/"
+    exit 1
+fi
+cp "$BIN_PATH" "$APP_DIR/Contents/MacOS/Grasp"
 
 cat << 'EOF' > "$APP_DIR/Contents/Info.plist"
 <?xml version="1.0" encoding="UTF-8"?>

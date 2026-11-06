@@ -1,0 +1,19 @@
+{
+  "name": "grasp-app",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Grasp cross-platform file transfer app (Capacitor)",
+  "scripts": {
+    "build": "echo 'static assets, no build step'",
+    "sync": "cap sync"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.2.0",
+    "@capacitor/core": "^6.2.0",
+    "@capacitor/filesystem": "^6.0.1",
+    "@capacitor/preferences": "^6.0.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.2.0"
+  }
+}

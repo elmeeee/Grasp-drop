@@ -12,7 +12,8 @@
   <a href="#-quick-installation"><img src="https://img.shields.io/badge/Platform-macOS%20%7C%20Windows%20%7C%20Linux%20%7C%20Android%20%7C%20iOS-indigo?style=for-the-badge" alt="Platforms"></a>
   <a href="#-license"><img src="https://img.shields.io/badge/License-MIT-06B6D4?style=for-the-badge" alt="License"></a>
   <a href="https://swift.org"><img src="https://img.shields.io/badge/Swift-5.9-orange?style=for-the-badge&logo=swift" alt="Swift"></a>
-  <a href="https://go.dev"><img src="https://img.shields.io/badge/Go-1.24-00ADD8?style=for-the-badge&logo=go" alt="Go"></a>
+  <a href="https://www.rust-lang.org"><img src="https://img.shields.io/badge/Rust-1.75-000000?style=for-the-badge&logo=rust" alt="Rust"></a>
+  <a href="https://capacitorjs.com"><img src="https://img.shields.io/badge/Capacitor-6-53B9EA?style=for-the-badge&logo=capacitor" alt="Capacitor"></a>
 </p>
 
 ---
@@ -21,18 +22,18 @@
 
 **Grasp** is an open-source, lightweight file-sharing solution that connects your **MacBook**, **Android**, **iPhone**, **Windows PC**, and **Linux** machines on your local Wi-Fi network without requiring third-party cloud services or internet access.
 
-It features a **native macOS Menu Bar app** with full **Android Quick Share (Nearby Share)** protocol support, plus an **Instant Cross-Platform Web Hub** and standalone single-binary executables for **Windows** and **Linux**.
+It is built on a shared **Rust core** that speaks the **LocalSend Protocol v2.2**, so Grasp devices interoperate with the official LocalSend app on every platform. Native applications ship for **macOS** (Swift menu bar app), **Windows** (Electron shell), and **Android** (Capacitor app), plus standalone CLI binaries for **Windows** and **Linux**. A built-in **Instant Cross-Platform Web Hub** covers iPhone, iPad, and any browser.
 
 ---
 
 ## Key Features
 
-- **Zero Setup on Android**: Uses Android’s built-in **Quick Share (Nearby Share)** protocol over Bluetooth LE and local Wi-Fi. No Android apps needed!
+- **Shared Rust Core**: One transfer engine (`core/grasp-core`) powers macOS, Windows, Android, and Linux. Wire-compatible with the [LocalSend Protocol v2.2](https://github.com/localsend/protocol).
+- **Native Apps on Every Platform**: macOS menu bar app (Swift), Windows desktop app (Electron + Capacitor UI), Android app (Capacitor + JNI), plus standalone CLI binaries.
+- **LocalSend Interoperable**: Discover, send, and receive files with the official LocalSend app and any LocalSend-compatible device over HTTPS on port `53317`.
+- **Zero Setup on Android**: Also uses Android’s built-in **Quick Share (Nearby Share)** protocol over Bluetooth LE and local Wi-Fi.
 - **Instant Cross-Platform Web Hub**: Share files to and from **iPhone, iPad, Windows, and Linux** using a modern, responsive Web Portal with QR Code scanning.
-- **Bidirectional File Sharing**: Send files from your Mac to Android/Web devices or receive files seamlessly with real-time transfer progress.
 - **Privacy-First & 100% Local**: Files travel directly across your local Wi-Fi network with end-to-end encryption support. Zero cloud dependency.
-- **Modern macOS Native UI**: Built with Swift 5.9, SwiftUI, and AppKit featuring translucent glassmorphic popovers, PIN verification badges, and recent transfer history.
-- **Standalone Windows & Linux Binaries**: Single zero-dependency executables (`grasp-windows-x64.exe` & `grasp-linux-x64`) for non-macOS machines.
 - **Terminal & CLI Ready**: Includes 1-line terminal installers and simple `curl` / `PowerShell` commands for power users.
 
 ---
@@ -110,14 +111,49 @@ curl -fsSL https://raw.githubusercontent.com/elmeeee/Grasp-drop/main/install.sh 
 2. Open the displayed Web URL on your phone browser.
 3. Uploaded files will land directly in `C:\Users\<User>\Downloads\Grasp`.
 
+### LocalSend-Compatible Transfers (All Platforms)
+
+Grasp speaks the **LocalSend Protocol v2.2**, so it interoperates directly with the
+official [LocalSend](https://localsend.org) app on Android, iOS, Windows, and Linux.
+
+- **Discovery**: Multicast UDP on `224.0.0.167:53317`, with an HTTP subnet scan fallback.
+- **Transport**: HTTPS on port `53317` using a self-signed certificate; the fingerprint
+  is the SHA-256 hash of the DER certificate and is persisted across restarts.
+- **Endpoints**: `/api/localsend/v2/info`, `/register`, `/prepare-upload`, `/upload`,
+  `/cancel`, `/prepare-download`, `/download`.
+- **Integrity**: Every transfer carries a SHA-256 hash that the receiver verifies
+  (mismatches return `422`).
+
+From a terminal, send files directly to a peer IP:
+
+```bash
+# Linux / macOS
+grasp --send 192.168.1.42 photo.jpg video.mp4
+
+# Windows
+grasp.exe --send 192.168.1.42 photo.jpg
+```
+
+On macOS, nearby LocalSend-compatible devices appear automatically in the menu bar
+popover under **NEARBY DEVICES**; click a device to send files to it.
+
+> Firewall note: allow TCP and UDP on port `53317`, and disable AP isolation on your router.
+
 ---
 
 ## Building from Source
 
 ### Prerequisites
-- macOS 13.0+
+- macOS 13.0+ (for the native macOS app)
 - Xcode 15+ / Swift 5.9+
-- Go 1.24+ (for Windows/Linux cross-compilation)
+- Rust 1.75+ with `cargo` (shared core)
+- Node.js 18+ (Capacitor apps)
+
+### Build the Shared Rust Core
+```bash
+./scripts/build_core.sh
+```
+Cross-compiles the core for macOS, Windows, Linux, and every Android ABI.
 
 ### Build Native macOS App
 ```bash
@@ -132,13 +168,31 @@ cd Grasp-drop
 open bin/Grasp.app
 ```
 
-### Cross-Compile Standalone Windows & Linux Binaries
+### Build the Android App (.apk)
 ```bash
-# Compile for Windows (64-bit .exe)
-GOOS=windows GOARCH=amd64 go build -o bin/grasp-windows-x64.exe ./cmd/grasp-server
+./scripts/build_android.sh
+# → bin/grasp-android-debug.apk
+```
 
-# Compile for Linux (64-bit binary)
-GOOS=linux GOARCH=amd64 go build -o bin/grasp-linux-x64 ./cmd/grasp-server
+### Build the Windows App (.exe)
+```bash
+./scripts/build_windows.sh
+# → app/electron/dist/Grasp-<version>-x64.exe
+```
+
+### Cross-Compile Standalone Windows & Linux CLI
+```bash
+./scripts/build_core.sh
+# → bin/grasp-windows-x64.exe, bin/grasp-linux-x64, bin/grasp
+```
+
+The Rust CLI also serves the browser Web Hub (port `7456`) so any phone or PC on
+the network can exchange files through a browser:
+
+```bash
+grasp                 # LocalSend node + Web Hub
+grasp --no-web        # LocalSend node only
+grasp --send <ip> file # one-shot send
 ```
 
 ---
@@ -147,19 +201,37 @@ GOOS=linux GOARCH=amd64 go build -o bin/grasp-linux-x64 ./cmd/grasp-server
 
 ```
 Grasp/
+├── core/
+│   └── grasp-core/            # Shared Rust transfer core (LocalSend v2 compatible)
+│       └── src/
+│           ├── protocol.rs    # Wire data model & endpoints
+│           ├── identity.rs    # Self-signed TLS identity (+ persistence)
+│           ├── server.rs      # HTTPS server on :53317
+│           ├── discovery.rs   # Multicast UDP + subnet scan
+│           ├── sender.rs      # File sender
+│           ├── webhub.rs      # Browser Web Hub on :7456
+│           ├── ffi.rs         # C ABI
+│           └── jni.rs         # Android JNI bindings
+├── app/
+│   ├── www/                   # Shared Web UI (Capacitor renderer)
+│   ├── android/               # Capacitor Android app (.apk)
+│   └── electron/              # Electron Windows app (.exe)
 ├── Casks/
 │   └── grasp.rb               # Homebrew Cask formula for macOS
 ├── Sources/
 │   ├── Grasp/                 # Swift source code (SwiftUI, CoreBluetooth, Nearby Share)
 │   │   ├── Models/            # Transfer & Connection Data Models
 │   │   ├── NearbyShare/       # Native Google Quick Share Protobuf & ECC Engine
+│   │   ├── GraspShare/        # LocalSend v2 protocol (HTTPS server, discovery, sender)
 │   │   ├── Services/          # TransferManager state coordinator
 │   │   ├── UI/                # MenuBarView, WebShareModalView, GraspTheme
 │   │   └── WebReceiver/       # Swift WebReceiverServer (HTTP Engine)
 │   └── NDHackery/             # Objective-C bridge for native macOS notification center
-├── cmd/
-│   └── grasp-server/          # Standalone Go server for Windows & Linux
-├── bin/                       # Output build directory (Grasp.app, .exe, CLI scripts)
+├── scripts/
+│   ├── build_core.sh          # Cross-compile the Rust core
+│   ├── build_android.sh       # Build the Android APK
+│   └── build_windows.sh       # Package the Windows .exe
+├── bin/                       # Output build directory
 ├── install.ps1                # Windows 1-line PowerShell installer
 ├── install.sh                 # Linux & macOS 1-line Bash installer
 ├── build_mac_app.sh           # Native macOS app build script

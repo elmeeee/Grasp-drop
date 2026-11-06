@@ -2,9 +2,32 @@
 .build/
 build_spm/
 .vscode/
+
+# Built binaries
 bin/Grasp.app
 bin/DropFile.app
 bin/LocalSend.app
 bin/grasp-windows-x64.exe
 bin/grasp-linux-x64
+bin/grasp-macos
+bin/grasp
+bin/grasp-android-debug.apk
 bin/grasp-server
+bin/grasp-server.exe
+
+# Rust
+core/grasp-core/target/
+**/target/
+
+# Node / Capacitor / Electron
+node_modules/
+app/node_modules/
+app/electron/node_modules/
+app/electron/dist/
+app/android/app/build/
+app/android/.gradle/
+app/android/build/
+app/android/app/src/main/assets/public/
+app/android/app/src/main/jniLibs/
+app/android/local.properties
+app/electron/resources/bin/

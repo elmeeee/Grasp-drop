@@ -45,12 +45,19 @@ class TransferManager: NSObject, ObservableObject, CBCentralManagerDelegate {
     @Published var activeTransfer: ActiveTransfer?
     @Published var currentPendingTransfer: PendingTransfer?
     @Published var webURL: String = ""
+    @Published var isGraspShareRunning = false
+    @Published var nearbyPeers: [GraspPeer] = []
 
     weak var appDelegate: AnyObject?
 
     private var pendingRequests: [String: PendingTransfer] = [:]
     private var webServer: WebReceiverServer?
     private var centralManager: CBCentralManager?
+    private var graspServer: GraspServer?
+    private var graspDiscovery: GraspDiscovery?
+    private var graspSender: GraspSender?
+    private var graspInfo: GraspDeviceInfo?
+    private var discoveryCancellable: AnyCancellable?
 
     override init() {
         super.init()
@@ -121,14 +128,105 @@ class TransferManager: NSObject, ObservableObject, CBCentralManagerDelegate {
         web.start(port: 7456)
         self.webServer = web
 
+        startGraspShare()
+
         self.isRunning = true
         self.statusText = "Active & Visible to Everyone"
         print("[Grasp Engine] Quick Share & Web Receiver Engines Started!")
     }
 
+    // MARK: - Grasp Share v2 Layer
+
+    private func startGraspShare() {
+        GraspLog.write("startGraspShare() entered, downloadPath=\(downloadPath)")
+        let stateDir = URL(fileURLWithPath: downloadPath).appendingPathComponent(".grasp")
+        guard let identity = GraspIdentity.loadOrCreate(stateDirectory: stateDir) else {
+            GraspLog.write("could not create identity")
+            return
+        }
+        GraspLog.write("identity fingerprint=\(identity.fingerprint)")
+
+        let info = GraspDeviceInfo(
+            alias: deviceName,
+            version: GraspProtocol.protocolVersion,
+            deviceModel: "Mac",
+            deviceType: GraspProtocol.deviceDesktop,
+            fingerprint: identity.fingerprint,
+            port: Int(GraspProtocol.defaultPort),
+            protocol: GraspProtocol.schemeHTTPS,
+            download: true)
+        self.graspInfo = info
+
+        let server = GraspServer(
+            identity: identity,
+            info: info,
+            filesDirectory: { [weak self] in
+                self?.downloadPath ?? NSString(string: "~/Downloads/Grasp").expandingTildeInPath
+            },
+            onFileReceived: { [weak self] name, size in
+                Task { @MainActor in
+                    self?.handleFileReceived(fileName: name, fileSize: size, isWeb: true)
+                }
+            })
+        server.start()
+        graspServer = server
+
+        let discovery = GraspDiscovery(info: info)
+        discoveryCancellable = discovery.$peers
+            .receive(on: RunLoop.main)
+            .sink { [weak self] peers in
+                self?.nearbyPeers = peers
+            }
+        discovery.start()
+        graspDiscovery = discovery
+
+        graspSender = GraspSender(info: info)
+        isGraspShareRunning = true
+    }
+
+    private func stopGraspShare() {
+        graspServer?.stop()
+        graspServer = nil
+        graspDiscovery?.stop()
+        graspDiscovery = nil
+        graspSender = nil
+        discoveryCancellable = nil
+        isGraspShareRunning = false
+    }
+
+    func scanForNearbyPeers() {
+        graspDiscovery?.scanLocalSubnet()
+    }
+
+    func sendNearbyFiles(urls: [URL], to peer: GraspPeer) {
+        guard let sender = graspSender else { return }
+        Task {
+            do {
+                try await sender.send(files: urls, to: peer) { _ in }
+                handleFileReceived(
+                    fileName: urls.first?.lastPathComponent ?? "File",
+                    fileSize: 0, isWeb: true)
+            } catch {
+                print("[LocalSend] Send failed: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    func selectAndSendNearbyFiles(to peer: GraspPeer) {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = true
+        panel.prompt = "Send to \(peer.displayName)"
+        if panel.runModal() == .OK {
+            sendNearbyFiles(urls: panel.urls, to: peer)
+        }
+    }
+
     func stopEngine() {
         webServer?.stop()
         webServer = nil
+        stopGraspShare()
         isRunning = false
         statusText = "Stopped"
     }

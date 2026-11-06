@@ -1,0 +1,40 @@
+{
+  "name": "grasp-electron",
+  "version": "0.1.0",
+  "description": "Grasp desktop app for Windows (Electron + Rust core sidecar)",
+  "main": "lib/index.js",
+  "author": "KaMy Studio",
+  "license": "MIT",
+  "scripts": {
+    "electron:start": "electron .",
+    "electron:package": "electron-builder"
+  },
+  "dependencies": {
+    "@capacitor-community/electron": "^5.0.1",
+    "@capacitor/core": "^6.2.0"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "org.grasp.app",
+    "productName": "Grasp",
+    "files": [
+      "lib/**/*",
+      "src/**/*",
+      "assets/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/bin",
+        "to": "bin",
+        "filter": ["**/*"]
+      }
+    ],
+    "win": {
+      "target": ["nsis", "portable"],
+      "artifactName": "Grasp-${version}-${arch}.${ext}"
+    }
+  }
+}

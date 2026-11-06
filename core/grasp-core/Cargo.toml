@@ -1,0 +1,40 @@
+[package]
+name = "grasp-core"
+version = "0.1.0"
+edition = "2021"
+description = "Grasp cross-platform local file transfer core (LocalSend v2 compatible)"
+license = "MIT"
+
+[lib]
+name = "grasp_core"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[[bin]]
+name = "grasp"
+path = "src/bin/grasp.rs"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+hex = "0.4"
+rand = "0.8"
+rcgen = { version = "0.13", features = ["pem"] }
+rustls = "0.23"
+tiny_http = { version = "0.12", features = ["ssl-rustls"] }
+reqwest = { version = "0.12", default-features = false, features = [
+    "blocking",
+    "rustls-tls",
+    "json",
+] }
+socket2 = "0.5"
+libc = "0.2"
+anyhow = "1"
+once_cell = "1"
+uuid = { version = "1", features = ["v4"] }
+
+[target.'cfg(target_os = "android")'.dependencies]
+jni = "0.21"
+
+[build-dependencies]
+cbindgen = "0.27"

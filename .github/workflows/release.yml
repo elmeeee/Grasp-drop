@@ -22,10 +22,20 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup Go
-        uses: actions/setup-go@v5
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
         with:
-          go-version: '1.24'
+          targets: x86_64-pc-windows-gnu,x86_64-unknown-linux-gnu,aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install cross-compilation tools
+        run: |
+          brew install mingw-w64 zig
+          cargo install cargo-ndk cargo-zigbuild
 
       - name: Build macOS App Bundle
         run: |
@@ -35,11 +45,11 @@ jobs:
           zip -r Grasp-macOS.zip Grasp.app
           cp Grasp-macOS.zip Grasp.app.zip
 
-      - name: Build Standalone Windows & Linux Binaries
+      - name: Build Rust Core for all platforms
         run: |
-          go mod init grasp || true
-          GOOS=windows GOARCH=amd64 go build -o bin/grasp-windows-x64.exe ./cmd/grasp-server
-          GOOS=linux GOARCH=amd64 go build -o bin/grasp-linux-x64 ./cmd/grasp-server
+          chmod +x scripts/build_core.sh
+          ./scripts/build_core.sh
+          cp core/grasp-core/target/release/grasp bin/grasp-macos
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
@@ -50,6 +60,7 @@ jobs:
             bin/Grasp.app.zip
             bin/grasp-windows-x64.exe
             bin/grasp-linux-x64
+            bin/grasp-macos
 
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
@@ -60,5 +71,56 @@ jobs:
             bin/Grasp.app.zip
             bin/grasp-windows-x64.exe
             bin/grasp-linux-x64
+            bin/grasp-macos
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install cargo-ndk
+        run: cargo install cargo-ndk
+
+      - name: Build the Rust core for Android
+        run: |
+          cargo ndk -t arm64-v8a -t armeabi-v7a -t x86_64 \
+            -o app/android/app/src/main/jniLibs \
+            build --manifest-path core/grasp-core/Cargo.toml --release
+
+      - name: Build the APK
+        run: |
+          cd app
+          npm install
+          npx cap sync android
+          cd android
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: grasp-android
+          path: app/android/app/build/outputs/apk/debug/app-debug.apk
