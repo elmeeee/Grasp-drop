@@ -7,6 +7,7 @@ use std::collections::HashMap;
 use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4, UdpSocket};
 use std::sync::{Arc, Mutex};
 use std::thread;
+use std::time::Duration;
 
 /// A callback invoked whenever a new peer is discovered.
 pub type PeerCallback = Box<dyn Fn(Peer) + Send + Sync>;
@@ -104,6 +105,11 @@ impl Discovery {
         }
     }
 
+    /// Stores a peer found outside multicast (for example by a subnet scan).
+    pub fn record(&self, peer: Peer) {
+        self.peers.lock().unwrap().insert(peer.info.fingerprint.clone(), peer);
+    }
+
     /// Returns the discovered peers.
     pub fn peers(&self) -> Vec<Peer> {
         self.peers.lock().unwrap().values().cloned().collect()
@@ -128,43 +134,55 @@ fn bind_multicast() -> Result<UdpSocket> {
     Ok(socket.into())
 }
 
-/// Fallback: probes every host on the local /24 via HTTP register.
+/// Fallback: probes every host on the local /24 via HTTP register, in parallel.
+/// Each probe times out quickly so unused addresses do not stall the scan.
 pub fn scan_subnet(info: &DeviceInfo, local_ip: Ipv4Addr, on_found: PeerCallback) {
     let octets = local_ip.octets();
     let prefix = format!("{}.{}.{}", octets[0], octets[1], octets[2]);
     let info = info.clone();
+    let on_found: std::sync::Arc<dyn Fn(Peer) + Send + Sync> = std::sync::Arc::from(on_found);
 
     thread::spawn(move || {
-        let client = match crate::sender::build_client() {
+        let client = match reqwest::blocking::Client::builder()
+            .danger_accept_invalid_certs(true)
+            .connect_timeout(Duration::from_millis(700))
+            .timeout(Duration::from_millis(1500))
+            .build()
+        {
             Ok(client) => client,
             Err(_) => return,
         };
 
-        for host in 1..=254u8 {
-            let ip = format!("{}.{}", prefix, host);
-            if ip == local_ip.to_string() {
-                continue;
-            }
-            let url = format!("https://{}:{}{}", ip, DEFAULT_PORT, PATH_REGISTER);
-            let info_clone = info.clone();
-            let client_clone = client.clone();
-            let on_found = &on_found;
-            if let Ok(response) = client_clone
-                .post(&url)
-                .json(&info_clone)
-                .send()
-            {
-                if let Ok(remote) = response.json::<DeviceInfo>() {
-                    if !remote.fingerprint.is_empty()
-                        && remote.fingerprint != info.fingerprint
-                    {
-                        on_found(Peer {
-                            info: remote,
-                            ip: ip.clone(),
-                        });
+        // 16 workers, each covering a slice of the 1..=254 host range.
+        let workers: Vec<_> = (0..16u8)
+            .map(|worker| {
+                let client = client.clone();
+                let info = info.clone();
+                let prefix = prefix.clone();
+                let on_found = std::sync::Arc::clone(&on_found);
+                let own_ip = local_ip.to_string();
+                thread::spawn(move || {
+                    for host in (1..=254u8).filter(|h| h % 16 == worker) {
+                        let ip = format!("{}.{}", prefix, host);
+                        if ip == own_ip {
+                            continue;
+                        }
+                        let url = format!("https://{}:{}{}", ip, DEFAULT_PORT, PATH_REGISTER);
+                        let response = match client.post(&url).json(&info).send() {
+                            Ok(response) => response,
+                            Err(_) => continue,
+                        };
+                        if let Ok(remote) = response.json::<DeviceInfo>() {
+                            if !remote.fingerprint.is_empty() && remote.fingerprint != info.fingerprint {
+                                on_found(Peer { info: remote, ip });
+                            }
+                        }
                     }
-                }
-            }
+                })
+            })
+            .collect();
+        for worker in workers {
+            let _ = worker.join();
         }
     });
 }

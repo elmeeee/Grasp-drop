@@ -4,7 +4,9 @@ use crate::identity::Identity;
 use crate::protocol::*;
 use anyhow::{Context, Result};
 use sha2::{Digest, Sha256};
+use crate::transfers;
 use std::collections::HashMap;
+use std::io::{Read, Write};
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use tiny_http::{Header, Method, Request, Response, Server, StatusCode};
@@ -12,6 +14,7 @@ use tiny_http::{Header, Method, Request, Response, Server, StatusCode};
 /// Tracks an upload prepared but not yet completed.
 #[derive(Clone)]
 struct UploadSession {
+    peer: String,
     files: HashMap<String, FileMetadata>,
     tokens: HashMap<String, String>,
 }
@@ -155,6 +158,7 @@ fn handle_prepare_upload(mut request: Request, state: Arc<Mutex<ServerState>>) -
     state.lock().unwrap().sessions.insert(
         session_id.clone(),
         UploadSession {
+            peer: parsed.info.alias.clone(),
             files: parsed.files,
             tokens: tokens.clone(),
         },
@@ -170,7 +174,7 @@ fn handle_prepare_upload(mut request: Request, state: Arc<Mutex<ServerState>>) -
 }
 
 fn handle_upload(
-    mut request: Request,
+    request: Request,
     query: &HashMap<String, String>,
     state: Arc<Mutex<ServerState>>,
 ) -> Result<()> {
@@ -178,7 +182,7 @@ fn handle_upload(
     let file_id = query.get("fileId").cloned().unwrap_or_default();
     let token = query.get("token").cloned().unwrap_or_default();
 
-    let (meta, files_dir) = {
+    let (meta, peer, files_dir) = {
         let locked = state.lock().unwrap();
         let session = match locked.sessions.get(&session_id) {
             Some(session) => session.clone(),
@@ -191,39 +195,69 @@ fn handle_upload(
             Some(meta) => meta.clone(),
             None => return respond_text(request, StatusCode(400), "Unknown file"),
         };
-        (meta, locked.files_dir.clone())
+        (meta, session.peer.clone(), locked.files_dir.clone())
     };
 
     std::fs::create_dir_all(&files_dir).ok();
     let target = unique_path(&files_dir, &sanitize_name(&meta.file_name));
+    let transfer_id = transfers::begin("in", &peer, &meta.file_name, meta.size);
 
-    let mut data = Vec::new();
-    request
-        .as_reader()
-        .read_to_end(&mut data)
-        .context("read upload body")?;
+    // Stream the body to disk while hashing it, reporting progress as we go.
+    let mut request = request;
+    let received = stream_to_file(request.as_reader(), &target, &transfer_id);
+    let (written, digest) = match received {
+        Ok(result) => result,
+        Err(err) => {
+            let _ = std::fs::remove_file(&target);
+            transfers::finish(&transfer_id, false, Some(err.to_string()));
+            return respond_text(request, StatusCode(500), "Transfer error");
+        }
+    };
 
     if let Some(expected) = &meta.sha256 {
-        if !expected.is_empty() {
-            let actual = hex::encode(Sha256::digest(&data));
-            if !actual.eq_ignore_ascii_case(expected) {
-                return respond_text(request, StatusCode(422), "Checksum mismatch");
-            }
+        if !expected.is_empty() && !digest.eq_ignore_ascii_case(expected) {
+            let _ = std::fs::remove_file(&target);
+            transfers::finish(&transfer_id, false, Some("checksum mismatch".to_string()));
+            return respond_text(request, StatusCode(422), "Checksum mismatch");
         }
     }
 
-    std::fs::write(&target, &data)?;
     let name = target
         .file_name()
         .map(|n| n.to_string_lossy().to_string())
         .unwrap_or_default();
-    eprintln!("[Otter] Received {} ({} bytes)", name, data.len());
+    eprintln!("[Otter] Received {} ({} bytes)", name, written);
+    transfers::finish(&transfer_id, true, None);
 
     if let Some(callback) = state.lock().unwrap().on_receive.as_ref() {
-        callback(name, data.len() as i64);
+        callback(name, written);
     }
 
     respond_text(request, StatusCode(200), "")
+}
+
+/// Copies `reader` into `target`, returning the byte count and SHA-256 hex digest.
+fn stream_to_file(
+    reader: &mut dyn Read,
+    target: &PathBuf,
+    transfer_id: &str,
+) -> Result<(i64, String)> {
+    let mut file = std::fs::File::create(target).context("create target file")?;
+    let mut hasher = Sha256::new();
+    let mut buffer = vec![0u8; 64 * 1024];
+    let mut total: i64 = 0;
+    loop {
+        let read = reader.read(&mut buffer).context("read upload body")?;
+        if read == 0 {
+            break;
+        }
+        file.write_all(&buffer[..read]).context("write file")?;
+        hasher.update(&buffer[..read]);
+        total += read as i64;
+        transfers::progress(transfer_id, total);
+    }
+    file.flush().context("flush file")?;
+    Ok((total, hex::encode(hasher.finalize())))
 }
 
 fn handle_prepare_download(

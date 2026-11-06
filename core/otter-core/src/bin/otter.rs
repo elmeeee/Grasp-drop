@@ -133,11 +133,15 @@ fn default_alias() -> String {
 }
 
 fn hostname() -> Option<String> {
-    std::env::var("HOSTNAME").ok().or_else(|| {
-        std::fs::read_to_string("/etc/hostname")
-            .ok()
-            .map(|s| s.trim().to_string())
-    })
+    if let Ok(name) = std::env::var("HOSTNAME") {
+        if !name.trim().is_empty() {
+            return Some(name.trim().to_string());
+        }
+    }
+    // macOS and Windows have no /etc/hostname; ask the OS.
+    let output = std::process::Command::new("hostname").arg("-s").output().ok()?;
+    let name = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    if name.is_empty() { None } else { Some(name) }
 }
 
 fn dirs_home() -> PathBuf {

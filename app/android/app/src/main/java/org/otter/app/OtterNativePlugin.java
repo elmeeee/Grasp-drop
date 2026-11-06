@@ -28,6 +28,14 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Base64;
 import java.util.Locale;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+import android.app.Notification;
+import android.app.NotificationManager;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 /**
  * Bridges the Otter Rust core (server + discovery + sender) to the WebView.
@@ -51,7 +59,13 @@ public class OtterNativePlugin extends Plugin {
     private static native String nativeFingerprint(long handle);
     private static native String nativePeers(long handle);
     private static native void nativeScanSubnet(long handle);
-    private static native String nativeSendFiles(long handle, String targetIp, int port, String filesJson);
+    private static native String nativeSendFiles(long handle, String targetIp, String peerName, int port, String filesJson);
+    private static native String nativeTransfers();
+    private static native void nativeClearHistory();
+
+    /** Pushes live transfer progress into the foreground-service notification. */
+    private ScheduledExecutorService notifier;
+    private boolean notificationBusy = false;
 
     @PluginMethod
     public void start(PluginCall call) {
@@ -70,6 +84,8 @@ public class OtterNativePlugin extends Plugin {
             nativeStop(nodeHandle);
         }
         nodeHandle = nativeStart(alias, stateDir, filesDir);
+
+        startNotificationLoop();
 
         // Keep the node alive when the app is backgrounded.
         Intent serviceIntent = new Intent(getContext(), OtterForegroundService.class);
@@ -92,6 +108,7 @@ public class OtterNativePlugin extends Plugin {
             nativeStop(nodeHandle);
             nodeHandle = 0L;
         }
+        stopNotificationLoop();
         getContext().stopService(new Intent(getContext(), OtterForegroundService.class));
         call.resolve();
     }
@@ -143,49 +160,164 @@ public class OtterNativePlugin extends Plugin {
 
     @PluginMethod
     public void sendFiles(PluginCall call) {
-        if (nodeHandle == 0L) {
+        final long handle = nodeHandle;
+        if (handle == 0L) {
             call.reject("Service not running");
             return;
         }
-        String targetIp = call.getString("targetIp");
-        Integer port = call.getInt("port", 53317);
-        JSArray files = call.getArray("files");
+        final String targetIp = call.getString("targetIp");
+        final String peerName = call.getString("peerName", targetIp);
+        final Integer port = call.getInt("port", 53317);
+        final JSArray files = call.getArray("files");
         if (targetIp == null || files == null) {
             call.reject("Missing targetIp or files");
             return;
         }
 
-        // Materialise each transferred file into the cache dir, then hand the
-        // resulting paths to the Rust sender.
-        JSArray paths = new JSArray();
-        try {
-            File cacheDir = getContext().getCacheDir();
-            for (int index = 0; index < files.length(); index++) {
-                org.json.JSONObject file = files.getJSONObject(index);
-                String name = file.getString("name");
-                String base64 = file.getString("base64");
-                byte[] data = Base64.getDecoder().decode(base64);
-
-                File target = new File(cacheDir, name);
-                try (FileOutputStream output = new FileOutputStream(target)) {
-                    output.write(data);
+        new Thread(() -> {
+            try {
+                // Stage each file in the cache dir, then hand the paths to the Rust sender.
+                JSArray paths = new JSArray();
+                File cacheDir = getContext().getCacheDir();
+                for (int index = 0; index < files.length(); index++) {
+                    org.json.JSONObject file = files.getJSONObject(index);
+                    String name = file.getString("name");
+                    byte[] data = Base64.getDecoder().decode(file.getString("base64"));
+                    File target = new File(cacheDir, name);
+                    try (FileOutputStream output = new FileOutputStream(target)) {
+                        output.write(data);
+                    }
+                    paths.put(target.getAbsolutePath());
                 }
-                paths.put(target.getAbsolutePath());
+
+                String resultJson = nativeSendFiles(handle, targetIp, peerName, port, paths.toString());
+                JSObject result = new JSObject(resultJson);
+                call.resolve(result);
+            } catch (Exception exception) {
+                call.reject("Send failed: " + exception.getMessage());
             }
-        } catch (Exception exception) {
-            call.reject("Failed to stage files: " + exception.getMessage());
+        }, "otter-send").start();
+    }
+
+    /** Active transfers and history, straight from the Rust core. */
+    @PluginMethod
+    public void getTransfers(PluginCall call) {
+        JSObject result = new JSObject();
+        try {
+            JSObject snapshot = new JSObject(nativeTransfers());
+            result.put("active", snapshot.optJSONArray("active") != null ? snapshot.getJSONArray("active") : new JSArray());
+            result.put("history", snapshot.optJSONArray("history") != null ? snapshot.getJSONArray("history") : new JSArray());
+        } catch (JSONException exception) {
+            result.put("active", new JSArray());
+            result.put("history", new JSArray());
+        }
+        call.resolve(result);
+    }
+
+    @PluginMethod
+    public void clearHistory(PluginCall call) {
+        nativeClearHistory();
+        call.resolve();
+    }
+
+    /** Removes a received file that has not been saved yet. */
+    @PluginMethod
+    public void deleteReceivedFile(PluginCall call) {
+        String name = call.getString("name");
+        if (name == null || name.isEmpty() || name.contains("/") || name.startsWith(".")) {
+            call.reject("Invalid file name");
             return;
         }
-
-        String resultJson = nativeSendFiles(nodeHandle, targetIp, port, paths.toString());
-        try {
-            call.resolve(new JSObject(resultJson));
-        } catch (JSONException exception) {
-            JSObject result = new JSObject();
-            result.put("sent", 0);
-            result.put("total", paths.length());
-            call.resolve(result);
+        File file = new File(receivedDir(), name);
+        if (file.isFile() && !file.delete()) {
+            call.reject("Could not delete file");
+            return;
         }
+        call.resolve();
+    }
+
+    /** Starts the 700 ms loop that mirrors active transfers into the notification. */
+    private void startNotificationLoop() {
+        stopNotificationLoop();
+        notifier = Executors.newSingleThreadScheduledExecutor();
+        notifier.scheduleAtFixedRate(this::refreshNotification, 0, 700, TimeUnit.MILLISECONDS);
+    }
+
+    private void stopNotificationLoop() {
+        if (notifier != null) {
+            notifier.shutdownNow();
+            notifier = null;
+        }
+    }
+
+    private void refreshNotification() {
+        try {
+            if (nodeHandle == 0L) {
+                return;
+            }
+            NotificationManager manager = getContext().getSystemService(NotificationManager.class);
+            if (manager == null) {
+                return;
+            }
+            JSONArray active = new JSONObject(nativeTransfers()).optJSONArray("active");
+            if (active == null || active.length() == 0) {
+                if (notificationBusy) {
+                    manager.notify(OtterForegroundService.NOTIFICATION_ID,
+                            idleNotification("Visible on your network"));
+                    notificationBusy = false;
+                }
+                return;
+            }
+
+            long total = 0;
+            long done = 0;
+            boolean sending = false;
+            String firstName = "";
+            for (int index = 0; index < active.length(); index++) {
+                JSONObject item = active.getJSONObject(index);
+                total += item.optLong("total", 0);
+                done += item.optLong("done", 0);
+                if ("out".equals(item.optString("direction"))) {
+                    sending = true;
+                }
+                if (index == 0) {
+                    firstName = item.optString("file_name", "");
+                }
+            }
+            int percent = total > 0 ? (int) (done * 100 / total) : 0;
+            String title = (sending ? "Sending " : "Receiving ")
+                    + (active.length() == 1 ? firstName : active.length() + " files");
+            String text = percent + "%  ·  " + formatBytes(done) + " of " + formatBytes(total);
+
+            Notification notification = OtterForegroundService.builderFor(getContext())
+                    .setContentTitle(title)
+                    .setContentText(text)
+                    .setSmallIcon(android.R.drawable.stat_sys_upload)
+                    .setProgress(100, percent, false)
+                    .setOngoing(true)
+                    .setOnlyAlertOnce(true)
+                    .build();
+            manager.notify(OtterForegroundService.NOTIFICATION_ID, notification);
+            notificationBusy = true;
+        } catch (Exception ignored) {
+            // Notification updates are best-effort; the transfer itself is unaffected.
+        }
+    }
+
+    private Notification idleNotification(String text) {
+        return OtterForegroundService.builderFor(getContext())
+                .setContentTitle("Otter")
+                .setContentText(text)
+                .setSmallIcon(android.R.drawable.stat_sys_upload)
+                .setOngoing(true)
+                .build();
+    }
+
+    private static String formatBytes(long bytes) {
+        if (bytes < 1024) return bytes + " B";
+        if (bytes < 1024L * 1024) return String.format(Locale.US, "%.1f KB", bytes / 1024.0);
+        if (bytes < 1024L * 1024 * 1024) return String.format(Locale.US, "%.1f MB", bytes / (1024.0 * 1024));
+        return String.format(Locale.US, "%.2f GB", bytes / (1024.0 * 1024 * 1024));
     }
 
     /** Saves a received file into the shared media collections so it shows up in Gallery/Files. */

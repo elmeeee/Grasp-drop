@@ -17,8 +17,8 @@ import androidx.annotation.Nullable;
  * Wi-Fi multicast lock so device discovery works on Android.
  */
 public class OtterForegroundService extends Service {
-    private static final String CHANNEL_ID = "otter_service";
-    private static final int NOTIFICATION_ID = 7456;
+    public static final String CHANNEL_ID = "otter_service";
+    public static final int NOTIFICATION_ID = 7456;
 
     private WifiManager.MulticastLock multicastLock;
 
@@ -56,6 +56,12 @@ public class OtterForegroundService extends Service {
                 manager.createNotificationChannel(channel);
             }
         }
+    }
+
+    static Notification.Builder builderFor(android.content.Context context) {
+        return (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                ? new Notification.Builder(context, CHANNEL_ID)
+                : new Notification.Builder(context);
     }
 
     private Notification buildNotification() {

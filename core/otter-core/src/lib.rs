@@ -12,6 +12,7 @@ pub mod jni;
 pub mod protocol;
 pub mod sender;
 pub mod server;
+pub mod transfers;
 pub mod webhub;
 
 use anyhow::Result;
@@ -50,7 +51,15 @@ impl OtterNode {
 
     /// Triggers an HTTP subnet scan for peers.
     pub fn scan_subnet(&self, local_ip: Ipv4Addr, on_found: PeerCallback) {
-        discovery::scan_subnet(&self.info, local_ip, on_found);
+        let discovery = Arc::clone(&self.discovery);
+        discovery::scan_subnet(
+            &self.info,
+            local_ip,
+            Box::new(move |peer: protocol::Peer| {
+                discovery.record(peer.clone());
+                on_found(peer);
+            }),
+        );
     }
 
     /// Stops discovery and the server.
@@ -69,6 +78,7 @@ pub fn start_node(
     on_peer: Option<PeerCallback>,
 ) -> Result<OtterNode> {
     let identity = Identity::load_or_create(&state_dir)?;
+    transfers::init(&state_dir);
     let info = DeviceInfo::new(alias, identity.fingerprint.clone());
 
     let server = OtterServer::start(

@@ -129,6 +129,7 @@ pub extern "system" fn Java_org_otter_app_OtterNativePlugin_nativeSendFiles(
     _class: JClass,
     handle: jlong,
     target_ip: JString,
+    peer_name: JString,
     port: jint,
     files_json: JString,
 ) -> jstring {
@@ -136,6 +137,10 @@ pub extern "system" fn Java_org_otter_app_OtterNativePlugin_nativeSendFiles(
         .get_string(&target_ip)
         .map(|s| s.into())
         .unwrap_or_default();
+    let peer_name: String = env
+        .get_string(&peer_name)
+        .map(|s| s.into())
+        .unwrap_or_else(|_| target_ip.clone());
     let files_json: String = env
         .get_string(&files_json)
         .map(|s| s.into())
@@ -146,7 +151,7 @@ pub extern "system" fn Java_org_otter_app_OtterNativePlugin_nativeSendFiles(
 
     let peer = Peer {
         info: DeviceInfo {
-            alias: target_ip.clone(),
+            alias: peer_name,
             version: PROTOCOL_VERSION.to_string(),
             device_model: None,
             device_type: None,
@@ -212,4 +217,26 @@ fn local_ipv4() -> Option<std::net::Ipv4Addr> {
         std::net::SocketAddr::V4(addr) => Some(*addr.ip()),
         _ => None,
     }
+}
+
+/// Returns active and finished transfers as JSON: `{"active":[...],"history":[...]}`.
+#[no_mangle]
+pub extern "system" fn Java_org_otter_app_OtterNativePlugin_nativeTransfers(
+    env: JNIEnv,
+    _class: JClass,
+) -> jstring {
+    let json = serde_json::to_string(&crate::transfers::snapshot())
+        .unwrap_or_else(|_| "{\"active\":[],\"history\":[]}".to_string());
+    env.new_string(json)
+        .map(|s| s.into_raw())
+        .unwrap_or(std::ptr::null_mut())
+}
+
+/// Clears finished transfers from history.
+#[no_mangle]
+pub extern "system" fn Java_org_otter_app_OtterNativePlugin_nativeClearHistory(
+    _env: JNIEnv,
+    _class: JClass,
+) {
+    crate::transfers::clear_history();
 }

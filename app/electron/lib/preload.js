@@ -62,6 +62,17 @@ contextBridge.exposeInMainWorld("Capacitor", {
       async saveReceivedFile() {
         return { savedTo: "" };
       },
+      // Transfer tracking and history are provided by the native apps only;
+      // the desktop shell reports nothing yet.
+      async getTransfers() {
+        return { active: [], history: [] };
+      },
+      async clearHistory() {
+        return {};
+      },
+      async deleteReceivedFile() {
+        return {};
+      },
     },
   },
 });

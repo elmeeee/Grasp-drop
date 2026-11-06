@@ -1,12 +1,30 @@
 //! Client that pushes files to a peer using the LocalSend upload API.
 
 use crate::protocol::*;
+use crate::transfers;
 use anyhow::{anyhow, Context, Result};
 use reqwest::blocking::Client;
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
+use std::io::{Read, Seek, SeekFrom};
 use std::path::Path;
 use std::time::Duration;
+
+/// Wraps a reader and reports how many bytes have been read through it.
+struct CountingReader<R> {
+    inner: R,
+    transfer_id: String,
+    done: i64,
+}
+
+impl<R: Read> Read for CountingReader<R> {
+    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
+        let read = self.inner.read(buf)?;
+        self.done += read as i64;
+        transfers::progress(&self.transfer_id, self.done);
+        Ok(read)
+    }
+}
 
 /// Builds an HTTP client that accepts LocalSend's self-signed certificates.
 pub fn build_client() -> Result<Client> {
@@ -39,8 +57,11 @@ pub fn send_files(
     let mut path_by_id: HashMap<String, String> = HashMap::new();
 
     for (index, path) in paths.iter().enumerate() {
-        let data = std::fs::read(path).with_context(|| format!("read {path}"))?;
-        let digest = hex::encode(Sha256::digest(&data));
+        // Hash by streaming so large files never sit in memory.
+        let mut file = std::fs::File::open(path).with_context(|| format!("open {path}"))?;
+        let mut hasher = Sha256::new();
+        let size = std::io::copy(&mut file, &mut hasher).with_context(|| format!("read {path}"))? as i64;
+        let digest = hex::encode(hasher.finalize());
         let id = format!("file-{}-{}", index, uuid::Uuid::new_v4().simple());
         let name = Path::new(path)
             .file_name()
@@ -51,7 +72,7 @@ pub fn send_files(
             FileMetadata {
                 id: id.clone(),
                 file_name: name,
-                size: data.len() as i64,
+                size,
                 file_type: mime_for(path),
                 sha256: Some(digest),
                 preview: None,
@@ -100,20 +121,43 @@ pub fn send_files(
             "{}{}?sessionId={}&fileId={}&token={}",
             base, PATH_UPLOAD, prepared.session_id, id, token
         );
-        let data = std::fs::read(&path)?;
+        let file_name = Path::new(&path)
+            .file_name()
+            .map(|n| n.to_string_lossy().to_string())
+            .unwrap_or_default();
+        let size = std::fs::metadata(&path).map(|m| m.len() as i64).unwrap_or(0);
+        let transfer_id = transfers::begin("out", &peer.info.alias, &file_name, size);
+
+        let mut file = std::fs::File::open(&path).with_context(|| format!("open {path}"))?;
+        file.seek(SeekFrom::Start(0))?;
+        let reader = CountingReader {
+            inner: file,
+            transfer_id: transfer_id.clone(),
+            done: 0,
+        };
         let upload = client
             .post(&url)
             .header("Content-Type", "application/octet-stream")
-            .body(data)
-            .send()
-            .with_context(|| format!("upload {path}"))?;
+            .body(reqwest::blocking::Body::sized(reader, size as u64))
+            .send();
+
+        let upload = match upload {
+            Ok(response) => response,
+            Err(err) => {
+                transfers::finish(&transfer_id, false, Some(err.to_string()));
+                return Err(anyhow!("upload {path}: {err}"));
+            }
+        };
 
         if upload.status().as_u16() != 200 {
+            let status = upload.status().as_u16();
+            transfers::finish(&transfer_id, false, Some(format!("HTTP {status}")));
             let _ = client
                 .post(format!("{}{}?sessionId={}", base, PATH_CANCEL, prepared.session_id))
                 .send();
-            return Err(anyhow!("upload failed: HTTP {}", upload.status()));
+            return Err(anyhow!("upload failed: HTTP {status}"));
         }
+        transfers::finish(&transfer_id, true, None);
 
         sent += 1;
         if let Some(callback) = progress {
