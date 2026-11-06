@@ -3,151 +3,171 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Otter — Web Hub</title>
+  <meta name="color-scheme" content="dark" />
+  <title>Otter Web Hub</title>
   <style>
-    :root { --bg:#0b0f19; --card:#151c2c; --primary:#4f46e5; --accent:#06b6d4; --text:#f8fafc; --muted:#94a3b8; }
-    * { box-sizing:border-box; }
-    body { margin:0; min-height:100vh; background:var(--bg); color:var(--text);
-      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-      display:flex; flex-direction:column; align-items:center; padding:24px 16px; gap:18px; }
-    .wrap { width:100%; max-width:520px; display:flex; flex-direction:column; gap:18px; }
-    .card { background:var(--card); border:1px solid rgba(255,255,255,.08); border-radius:18px; padding:20px;
-      box-shadow:0 14px 30px rgba(0,0,0,.4); }
-    h1 { font-size:20px; margin:0 0 4px; text-align:center; }
-    .sub { text-align:center; color:var(--muted); font-size:13px; margin:0 0 8px; }
-    .title { font-size:13px; font-weight:700; margin-bottom:12px; display:flex; justify-content:space-between; }
-    .muted { color:var(--muted); font-size:11px; font-weight:500; }
-    .drop { border:2px dashed rgba(6,182,212,.4); border-radius:14px; padding:26px 16px; text-align:center;
-      background:rgba(6,182,212,.03); cursor:pointer; }
-    .drop:hover { background:rgba(6,182,212,.08); border-color:var(--accent); }
-    .btn { background:linear-gradient(135deg,var(--primary),var(--accent)); color:#fff; border:none;
-      padding:9px 18px; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; margin-top:10px; }
-    input[type=file] { display:none; }
-    .status { margin-top:10px; font-size:13px; color:#22c55e; font-weight:600; text-align:center; }
-    .list { display:flex; flex-direction:column; gap:8px; max-height:240px; overflow:auto; }
-    .item { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px;
-      background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.05); border-radius:12px; }
-    .name { font-size:13px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    .meta { font-size:11px; color:var(--muted); }
-    .dl { background:rgba(255,255,255,.1); color:#fff; text-decoration:none; padding:6px 12px; border-radius:8px;
-      font-size:12px; font-weight:600; }
-    .dl:hover { background:var(--accent); }
-    textarea { width:100%; height:80px; background:rgba(0,0,0,.3); border:1px solid rgba(255,255,255,.1);
-      border-radius:12px; padding:12px; color:#fff; font-family:inherit; font-size:13px; resize:none; }
+    :root {
+      --bg: #0A0F1A; --surface: #111A2B; --surface-2: #17223A; --surface-3: #1E2C48;
+      --border: #223152; --text: #EDF2FA; --muted: #8794AD;
+      --primary: #1A89E4; --primary-soft: rgba(26,137,228,.14);
+      --success: #22C55E; --danger: #F05252;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; background: var(--bg); color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+    body { min-height: 100vh; padding: 20px 16px 40px; }
+    .wrap { max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+    header { display: flex; align-items: center; gap: 12px; padding-top: 6px; }
+    header h1 { margin: 0; font-size: 20px; font-weight: 700; }
+    header p { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 18px; }
+    .title { display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 700; margin-bottom: 12px; }
+    .count { font-size: 12px; color: var(--muted); background: var(--surface-2); border-radius: 999px; padding: 3px 9px; font-weight: 600; }
+    .drop { display: block; border: 2px dashed #2C4166; border-radius: 16px; padding: 28px 16px; text-align: center; cursor: pointer; transition: border-color .2s, background .2s; }
+    .drop.over, .drop:hover { border-color: var(--primary); background: var(--primary-soft); }
+    .drop strong { display: block; font-size: 16px; margin-bottom: 4px; }
+    .drop small { color: var(--muted); font-size: 13px; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 12px;
+      background: var(--primary); color: #fff; font: inherit; font-size: 15px; font-weight: 600; padding: 13px 18px;
+      cursor: pointer; text-decoration: none; width: 100%; }
+    .btn:disabled { opacity: .5; cursor: default; }
+    .btn.ghost { background: var(--surface-3); }
+    .queue { list-style: none; padding: 0; margin: 12px 0 0; display: flex; flex-direction: column; gap: 8px; }
+    .queue li { background: var(--surface-2); border-radius: 12px; padding: 10px 12px; font-size: 13px; }
+    .queue .row { display: flex; justify-content: space-between; gap: 10px; }
+    .queue .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .queue .state { color: var(--muted); flex: none; font-variant-numeric: tabular-nums; }
+    .queue .state.ok { color: var(--success); }
+    .queue .state.bad { color: var(--danger); }
+    .bar { height: 5px; background: var(--surface-3); border-radius: 999px; margin-top: 8px; overflow: hidden; }
+    .bar span { display: block; height: 100%; width: 0; background: var(--primary); border-radius: 999px; transition: width .2s; }
+    .item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px; background: var(--surface-2); border-radius: 12px; }
+    .item + .item { margin-top: 8px; }
+    .item .name { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .item small { color: var(--muted); font-size: 12px; }
+    .item a { color: #fff; background: var(--surface-3); text-decoration: none; font-size: 13px; font-weight: 600; padding: 8px 12px; border-radius: 10px; flex: none; }
+    .item a:hover { background: var(--primary); }
+    .empty { color: var(--muted); font-size: 13px; text-align: center; padding: 14px 0; }
+    input[type=file] { display: none; }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="card">
+<div class="wrap">
+  <header>
+    <div>
       <h1>Otter Web Hub</h1>
-      <p class="sub">Share files with this device over your local network</p>
+      <p>Send files to this device over your Wi-Fi.</p>
     </div>
+  </header>
 
-    <div class="card">
-      <div class="title">Clipboard Text</div>
-      <textarea id="clip" placeholder="Paste text or links here…"></textarea>
-      <button class="btn" style="width:100%" onclick="syncClipboard()">Sync Text</button>
-      <div class="status" id="clipStatus"></div>
-    </div>
+  <section class="card">
+    <div class="title"><span>Send files here</span></div>
+    <label class="drop" id="drop" for="picker">
+      <strong>Tap to choose files</strong>
+      <small>Select several at once, or drop them here</small>
+    </label>
+    <input type="file" id="picker" multiple />
+    <button class="btn" id="send" disabled style="margin-top:12px">Upload</button>
+    <ul class="queue" id="queue"></ul>
+  </section>
 
-    <div class="card">
-      <div class="title">Upload Files</div>
-      <div class="drop" onclick="document.getElementById('f').click()">
-        <div style="font-size:14px;font-weight:600;margin-bottom:4px">Tap to choose files</div>
-        <div class="muted">Photos, videos, documents, archives</div>
-        <button class="btn" type="button">Choose Files</button>
-        <input type="file" id="f" multiple onchange="upload(this.files)" />
-      </div>
-      <div class="status" id="upStatus"></div>
-    </div>
+  <section class="card">
+    <div class="title"><span>Available to download</span><span class="count" id="count">0</span></div>
+    <div id="files"><div class="empty">Loading…</div></div>
+  </section>
+</div>
 
-    <div class="card">
-      <div class="title"><span>Received / Shared Files</span><span class="muted" id="count">—</span></div>
-      <div class="list" id="list"><div class="muted" style="text-align:center;padding:12px">Loading…</div></div>
-    </div>
-  </div>
+<script>
+  const picker = document.getElementById("picker");
+  const drop = document.getElementById("drop");
+  const sendBtn = document.getElementById("send");
+  const queueEl = document.getElementById("queue");
+  let pending = [];
 
-  <script>
-    function fmt(bytes) {
-      if (bytes < 1024) return bytes + " B";
-      if (bytes < 1048576) return (bytes / 1024).toFixed(1) + " KB";
-      if (bytes < 1073741824) return (bytes / 1048576).toFixed(1) + " MB";
-      return (bytes / 1073741824).toFixed(2) + " GB";
-    }
+  function fmt(bytes) {
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + " KB";
+    if (bytes < 1073741824) return (bytes / 1048576).toFixed(1) + " MB";
+    return (bytes / 1073741824).toFixed(2) + " GB";
+  }
+  function esc(v) {
+    return String(v).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
 
-    async function syncClipboard() {
-      const text = document.getElementById("clip").value;
-      if (!text) return;
-      const status = document.getElementById("clipStatus");
-      status.textContent = "Syncing…";
-      try {
-        const response = await fetch("/api/clipboard", { method: "POST", body: text });
-        status.textContent = response.ok ? "✓ Synced" : "✕ Failed";
-      } catch (error) {
-        status.textContent = "✕ " + error;
-      }
-    }
+  function setPending(files) {
+    pending = Array.from(files);
+    sendBtn.disabled = pending.length === 0;
+    sendBtn.textContent = pending.length ? `Upload ${pending.length} file${pending.length > 1 ? "s" : ""}` : "Upload";
+    queueEl.innerHTML = pending.map((f, i) => `
+      <li data-i="${i}"><div class="row"><span class="name">${esc(f.name)}</span><span class="state">${fmt(f.size)}</span></div>
+      <div class="bar"><span></span></div></li>`).join("");
+  }
 
-    async function upload(files) {
-      if (!files || !files.length) return;
-      const status = document.getElementById("upStatus");
-      let completed = 0;
-      for (const file of files) {
-        status.textContent = `Uploading ${file.name}…`;
-        const form = new FormData();
-        form.append("file", file);
-        try {
-          const response = await fetch("/upload", { method: "POST", body: form });
-          if (!response.ok) {
-            status.textContent = "✕ Failed: " + file.name;
-            return;
-          }
-          completed++;
-        } catch (error) {
-          status.textContent = "✕ " + error;
-          return;
+  picker.addEventListener("change", () => setPending(picker.files));
+  ["dragenter", "dragover"].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.add("over"); }));
+  ["dragleave", "drop"].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.remove("over"); }));
+  drop.addEventListener("drop", (e) => setPending(e.dataTransfer.files));
+
+  // Uploads one file per request so each file has its own progress bar.
+  function uploadOne(file, index) {
+    return new Promise((resolve) => {
+      const item = queueEl.querySelector(`li[data-i="${index}"]`);
+      const bar = item.querySelector(".bar span");
+      const state = item.querySelector(".state");
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", "/upload");
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const pct = Math.round((e.loaded / e.total) * 100);
+          bar.style.width = pct + "%";
+          state.textContent = pct + "%";
         }
-      }
-      status.textContent = `✓ Uploaded ${completed} file(s)`;
-      loadFiles();
-    }
+      };
+      xhr.onload = () => {
+        const ok = xhr.status === 200;
+        state.textContent = ok ? "Done" : "Failed";
+        state.className = "state " + (ok ? "ok" : "bad");
+        bar.style.width = "100%";
+        resolve(ok);
+      };
+      xhr.onerror = () => {
+        state.textContent = "Failed";
+        state.className = "state bad";
+        resolve(false);
+      };
+      const form = new FormData();
+      form.append("file", file, file.name);
+      xhr.send(form);
+    });
+  }
 
-    async function loadFiles() {
-      try {
-        const files = await (await fetch("/api/files")).json();
-        const list = document.getElementById("list");
-        document.getElementById("count").textContent =
-          files.length + " file" + (files.length === 1 ? "" : "s");
-        if (!files.length) {
-          list.innerHTML = '<div class="muted" style="text-align:center;padding:12px">No files yet</div>';
-          return;
-        }
-        list.innerHTML = files.map((file) =>
-          `<div class="item">
-             <div>
-               <div class="name">${escapeHtml(file.name)}</div>
-               <div class="meta">${fmt(file.size)}</div>
-             </div>
-             <a class="dl" href="/download/${encodeURIComponent(file.name)}" download="${escapeHtml(file.name)}">Download</a>
-           </div>`).join("");
-      } catch (error) {
-        console.error(error);
-      }
+  sendBtn.addEventListener("click", async () => {
+    sendBtn.disabled = true;
+    const files = pending;
+    let done = 0;
+    for (let i = 0; i < files.length; i++) {
+      if (await uploadOne(files[i], i)) done++;
     }
-
-    function escapeHtml(value) {
-      return String(value).replace(/[&<>"']/g, (c) =>
-        ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
-    }
-
+    sendBtn.textContent = `Uploaded ${done} of ${files.length}`;
+    picker.value = "";
+    pending = [];
     loadFiles();
-    setInterval(loadFiles, 5000);
-    (async () => {
-      try {
-        const response = await (await fetch("/api/clipboard")).json();
-        if (response.text) document.getElementById("clip").value = response.text;
-      } catch (_) {}
-    })();
-  </script>
+  });
+
+  async function loadFiles() {
+    try {
+      const list = await (await fetch("/api/files", { cache: "no-store" })).json();
+      document.getElementById("count").textContent = list.length;
+      document.getElementById("files").innerHTML = list.length
+        ? list.map((f) => `<div class="item"><div style="min-width:0"><div class="name">${esc(f.name)}</div><small>${fmt(f.size)}</small></div>
+            <a href="/download/${encodeURIComponent(f.name)}" download>Download</a></div>`).join("")
+        : '<div class="empty">No files yet</div>';
+    } catch (_) {
+      document.getElementById("files").innerHTML = '<div class="empty">Could not load files</div>';
+    }
+  }
+  loadFiles();
+  setInterval(loadFiles, 5000);
+</script>
 </body>
 </html>

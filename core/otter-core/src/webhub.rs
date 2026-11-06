@@ -165,60 +165,89 @@ fn upload_file(mut request: Request, state: &Arc<Mutex<HubState>>) -> Result<()>
         }
     };
 
-    let (name, data) = match extract_multipart(&body, &boundary) {
-        Some(parsed) => parsed,
-        None => {
-            let response = Response::from_string("Upload error")
-                .with_status_code(StatusCode(400));
-            request.respond(response)?;
-            return Ok(());
-        }
-    };
+    let parts = extract_files(&body, &boundary);
+    if parts.is_empty() {
+        let response = Response::from_string("No files in upload")
+            .with_status_code(StatusCode(400));
+        request.respond(response)?;
+        return Ok(());
+    }
 
     let dir = state.lock().unwrap().files_dir.clone();
     std::fs::create_dir_all(&dir).ok();
-    let target = unique_path(&dir, &sanitize(&name));
-    std::fs::write(&target, &data)?;
-    eprintln!("[Otter] Web upload saved: {}", target.display());
 
-    let response = Response::from_string("OK").with_status_code(StatusCode(200));
+    let mut saved = 0usize;
+    for (name, data) in parts {
+        let transfer_id = crate::transfers::begin("in", "Web browser", &name, data.len() as i64);
+        let target = unique_path(&dir, &sanitize(&name));
+        match std::fs::write(&target, &data) {
+            Ok(()) => {
+                eprintln!("[Otter] Web upload saved: {}", target.display());
+                crate::transfers::progress(&transfer_id, data.len() as i64);
+                crate::transfers::finish(&transfer_id, true, None);
+                saved += 1;
+            }
+            Err(err) => {
+                crate::transfers::finish(&transfer_id, false, Some(err.to_string()));
+            }
+        }
+    }
+
+    let response = Response::from_string(format!("{saved} saved"))
+        .with_status_code(StatusCode(200));
     request.respond(response)?;
     Ok(())
 }
 
-/// Extracts the first file part from a multipart/form-data body.
-fn extract_multipart(body: &[u8], boundary: &str) -> Option<(String, Vec<u8>)> {
+/// Returns every file part of a multipart/form-data body as (file name, bytes).
+/// Parts without a filename (plain form fields) are skipped.
+fn extract_files(body: &[u8], boundary: &str) -> Vec<(String, Vec<u8>)> {
     let delimiter = format!("--{}", boundary);
     let delimiter_bytes = delimiter.as_bytes();
+    let header_end_marker = b"\r\n\r\n";
 
-    // Find the first boundary after the preamble.
-    let first = find_bytes(body, delimiter_bytes)?;
-    let after_first = first + delimiter_bytes.len();
+    let mut files = Vec::new();
+    // Split the body on every boundary; each chunk is "\r\n<headers>\r\n\r\n<data>\r\n".
+    let mut cursor = match find_bytes(body, delimiter_bytes) {
+        Some(index) => index + delimiter_bytes.len(),
+        None => return files,
+    };
 
-    // Header block ends at CRLFCRLF.
-    let crlfcrlf = b"[Otter]\n[Otter]\n";
-    let header_rel = find_bytes(&body[after_first..], crlfcrlf)?;
-    let header_start = after_first;
-    let header_end = after_first + header_rel;
-    let data_start = header_end + crlfcrlf.len();
+    loop {
+        // The closing boundary is followed by "--".
+        if body[cursor..].starts_with(b"--") {
+            break;
+        }
+        let next = match find_bytes(&body[cursor..], delimiter_bytes) {
+            Some(rel) => cursor + rel,
+            None => break,
+        };
 
-    let headers = String::from_utf8_lossy(&body[header_start..header_end]).to_string();
-    let name = headers
-        .split("filename=\"")
-        .nth(1)
-        .and_then(|rest| rest.split('"').next())
-        .unwrap_or("upload.bin")
-        .to_string();
+        // Chunk is between cursor and next: strip leading CRLF and trailing CRLF.
+        let mut chunk = &body[cursor..next];
+        if chunk.starts_with(b"\r\n") {
+            chunk = &chunk[2..];
+        }
+        if chunk.ends_with(b"\r\n") {
+            chunk = &chunk[..chunk.len() - 2];
+        }
 
-    // Data runs until the next boundary.
-    let next_rel = find_bytes(&body[data_start..], delimiter_bytes)?;
-    let mut data_end = data_start + next_rel;
-    // Trim the trailing CRLF that precedes the boundary.
-    if data_end >= 2 && &body[data_end - 2..data_end] == b"[Otter]\n" {
-        data_end -= 2;
+        if let Some(split) = find_bytes(chunk, header_end_marker) {
+            let headers = String::from_utf8_lossy(&chunk[..split]).to_string();
+            if let Some(name) = headers
+                .split("filename=\"")
+                .nth(1)
+                .and_then(|rest| rest.split('"').next())
+                .filter(|name| !name.is_empty())
+            {
+                let data = chunk[split + header_end_marker.len()..].to_vec();
+                files.push((name.to_string(), data));
+            }
+        }
+
+        cursor = next + delimiter_bytes.len();
     }
-
-    Some((name, body[data_start..data_end].to_vec()))
+    files
 }
 
 fn find_bytes(haystack: &[u8], needle: &[u8]) -> Option<usize> {

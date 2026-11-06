@@ -6,6 +6,7 @@
 #![cfg(target_os = "android")]
 
 use crate::protocol::{DeviceInfo, Peer, PROTOCOL_VERSION, SCHEME_HTTPS};
+use crate::webhub::{WebHub, WEB_HUB_PORT};
 use crate::{sender, start_node, OtterNode};
 use jni::objects::{JClass, JString};
 use jni::sys::{jint, jlong, jstring};
@@ -15,6 +16,9 @@ use std::sync::Mutex;
 
 struct NodeState {
     node: Mutex<Option<OtterNode>>,
+    /// Browser web hub, started on demand. Serves the same folder as the node.
+    hub: Mutex<Option<WebHub>>,
+    files_dir: PathBuf,
 }
 
 /// Starts a node and returns an opaque handle (0 on failure).
@@ -42,13 +46,15 @@ pub extern "system" fn Java_org_otter_app_OtterNativePlugin_nativeStart(
     match start_node(
         alias,
         PathBuf::from(state_dir),
-        PathBuf::from(files_dir),
+        PathBuf::from(files_dir.clone()),
         None,
         None,
     ) {
         Ok(node) => {
             let boxed = Box::new(NodeState {
                 node: Mutex::new(Some(node)),
+                hub: Mutex::new(None),
+                files_dir: PathBuf::from(&files_dir),
             });
             Box::into_raw(boxed) as jlong
         }
@@ -67,6 +73,9 @@ pub extern "system" fn Java_org_otter_app_OtterNativePlugin_nativeStop(
         return;
     }
     let boxed = unsafe { Box::from_raw(handle as *mut NodeState) };
+    if let Some(hub) = boxed.hub.lock().unwrap().take() {
+        hub.shutdown();
+    }
     let node = boxed.node.lock().unwrap().take();
     if let Some(node) = node {
         node.discovery_stop();
@@ -210,6 +219,7 @@ fn with_node<T>(handle: &jlong, f: impl FnOnce(&OtterNode) -> T) -> Option<T> {
     locked.as_ref().map(f)
 }
 
+#[allow(dead_code)]
 fn local_ipv4() -> Option<std::net::Ipv4Addr> {
     let socket = std::net::UdpSocket::bind("0.0.0.0:0").ok()?;
     socket.connect("8.8.8.8:80").ok()?;
@@ -239,4 +249,58 @@ pub extern "system" fn Java_org_otter_app_OtterNativePlugin_nativeClearHistory(
     _class: JClass,
 ) {
     crate::transfers::clear_history();
+}
+
+/// Starts the browser web hub on port 7456 and returns its address, e.g.
+/// `http://192.168.1.20:7456`. `local_ip` is the phone's Wi-Fi address, taken
+/// from the Android network stack by the caller. Returns "" on failure.
+#[no_mangle]
+pub extern "system" fn Java_org_otter_app_OtterNativePlugin_nativeStartWebHub(
+    mut env: JNIEnv,
+    _class: JClass,
+    handle: jlong,
+    local_ip: JString,
+) -> jstring {
+    let local_ip: String = env
+        .get_string(&local_ip)
+        .map(|s| s.into())
+        .unwrap_or_default();
+
+    let url = if handle == 0 || local_ip.is_empty() {
+        String::new()
+    } else {
+        let state = unsafe { &*(handle as *const NodeState) };
+        let mut hub = state.hub.lock().unwrap();
+        if hub.is_none() {
+            match WebHub::start(state.files_dir.clone(), WEB_HUB_PORT) {
+                Ok(started) => *hub = Some(started),
+                Err(_) => {}
+            }
+        }
+        if hub.is_some() {
+            format!("http://{}:{}", local_ip, WEB_HUB_PORT)
+        } else {
+            String::new()
+        }
+    };
+
+    env.new_string(url)
+        .map(|s| s.into_raw())
+        .unwrap_or(std::ptr::null_mut())
+}
+
+/// Stops the browser web hub if it is running.
+#[no_mangle]
+pub extern "system" fn Java_org_otter_app_OtterNativePlugin_nativeStopWebHub(
+    _env: JNIEnv,
+    _class: JClass,
+    handle: jlong,
+) {
+    if handle == 0 {
+        return;
+    }
+    let state = unsafe { &*(handle as *const NodeState) };
+    if let Some(hub) = state.hub.lock().unwrap().take() {
+        hub.shutdown();
+    }
 }

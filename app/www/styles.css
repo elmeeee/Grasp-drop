@@ -473,3 +473,7 @@ html, body {
   width: 100%;
 }
 .option:active { background: var(--surface-3); }
+
+/* ---------- Browser access (web hub) ---------- */
+.webhub { align-items: center; }
+.webhub .row-sub { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; color: var(--text); }

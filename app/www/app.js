@@ -38,6 +38,7 @@ function icon(name, size = 18) {
 // ---------------------------------------------------------------- state
 
 const state = {
+  webHub: "",
   visible: localStorage.getItem(KEYS.visible) !== "0",
   deviceName: localStorage.getItem(KEYS.name) || "",
   displayName: "",
@@ -218,10 +219,43 @@ function renderHeader() {
   });
 }
 
+function renderWebHub() {
+  const section = $("#web-section");
+  section.hidden = !state.webHub;
+  $("#web-url").textContent = state.webHub || "";
+}
+
+async function refreshWebHub() {
+  try {
+    const { url } = await native("getWebHub");
+    state.webHub = url || "";
+    renderWebHub();
+  } catch (_) { /* not running */ }
+}
+
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch (_) {
+    const area = document.createElement("textarea");
+    area.value = text;
+    area.style.position = "fixed";
+    area.style.opacity = "0";
+    document.body.appendChild(area);
+    area.select();
+    const ok = document.execCommand("copy");
+    area.remove();
+    return ok;
+  }
+}
+
 async function startNode() {
   try {
     const result = await native("start", state.deviceName ? { alias: state.deviceName } : {});
     state.running = true;
+    state.webHub = result.webHub || "";
+    renderWebHub();
     state.displayName = result.alias || state.deviceName;
   } catch (error) {
     state.running = false;
@@ -233,6 +267,8 @@ async function startNode() {
 async function stopNode() {
   try { await native("stop"); } catch (_) { /* already stopped */ }
   state.running = false;
+  state.webHub = "";
+  renderWebHub();
   state.peers = [];
   renderHeader();
   renderPeers();
@@ -622,6 +658,11 @@ function openSettings() {
 // ---------------------------------------------------------------- wiring
 
 function wire() {
+  $("#web-copy").addEventListener("click", async () => {
+    const ok = await copyText(state.webHub);
+    toast({ type: ok ? "success" : "error", title: ok ? "Address copied" : "Could not copy", message: ok ? state.webHub : "Select the address and copy it manually", duration: 2600 });
+  });
+
   const bar = document.querySelector(".topbar-sticky");
   window.addEventListener("scroll", () => bar.classList.toggle("scrolled", window.scrollY > 4), { passive: true });
 
@@ -654,7 +695,7 @@ async function main() {
   startPolling();
   if (state.visible) await startNode();
   else renderHeader();
-  await Promise.all([refreshTransfers(), refreshPeers(), refreshInbox()]);
+  await Promise.all([refreshTransfers(), refreshPeers(), refreshInbox(), refreshWebHub()]);
 }
 
 main();

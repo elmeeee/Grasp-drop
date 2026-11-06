@@ -26,7 +26,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.Locale;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -61,6 +65,8 @@ public class OtterNativePlugin extends Plugin {
     private static native void nativeScanSubnet(long handle);
     private static native String nativeSendFiles(long handle, String targetIp, String peerName, int port, String filesJson);
     private static native String nativeTransfers();
+    private static native String nativeStartWebHub(long handle, String localIp);
+    private static native void nativeStopWebHub(long handle);
     private static native void nativeClearHistory();
 
     /** Pushes live transfer progress into the foreground-service notification. */
@@ -99,12 +105,60 @@ public class OtterNativePlugin extends Plugin {
         result.put("alias", alias);
         result.put("fingerprint", nodeHandle != 0L ? nativeFingerprint(nodeHandle) : "");
         result.put("running", nodeHandle != 0L);
+        result.put("webHub", webHubUrl());
         call.resolve(result);
+    }
+
+    /** Address of the browser web hub, e.g. http://192.168.1.20:7456. Empty when unavailable. */
+    @PluginMethod
+    public void getWebHub(PluginCall call) {
+        JSObject result = new JSObject();
+        result.put("url", webHubUrl());
+        call.resolve(result);
+    }
+
+    private String webHubUrl() {
+        if (nodeHandle == 0L) {
+            return "";
+        }
+        String ip = wifiIPv4();
+        if (ip == null) {
+            return "";
+        }
+        String url = nativeStartWebHub(nodeHandle, ip);
+        return url == null ? "" : url;
+    }
+
+    /** The phone's IPv4 address on Wi-Fi (wlan*), falling back to any other LAN address. */
+    private String wifiIPv4() {
+        try {
+            String fallback = null;
+            for (NetworkInterface network : Collections.list(NetworkInterface.getNetworkInterfaces())) {
+                if (!network.isUp() || network.isLoopback()) {
+                    continue;
+                }
+                for (InetAddress address : Collections.list(network.getInetAddresses())) {
+                    if (address instanceof Inet4Address && !address.isLoopbackAddress()) {
+                        String ip = address.getHostAddress();
+                        if (network.getName() != null && network.getName().startsWith("wlan")) {
+                            return ip;
+                        }
+                        if (fallback == null) {
+                            fallback = ip;
+                        }
+                    }
+                }
+            }
+            return fallback;
+        } catch (Exception exception) {
+            return null;
+        }
     }
 
     @PluginMethod
     public void stop(PluginCall call) {
         if (nodeHandle != 0L) {
+            nativeStopWebHub(nodeHandle);
             nativeStop(nodeHandle);
             nodeHandle = 0L;
         }

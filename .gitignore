@@ -41,3 +41,6 @@ web/public/downloads/
 # Release signing (never commit)
 app/android/keystore.properties
 *.jks
+
+# Release APK build output (distributed via the website, not git)
+bin/otter-android-release.apk
