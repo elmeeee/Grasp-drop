@@ -34,3 +34,6 @@ app/electron/resources/bin/
 
 # Website download binaries are deployed from local builds, not committed
 web/public/downloads/
+
+# Firebase local cache
+.firebase/
