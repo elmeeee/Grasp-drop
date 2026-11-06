@@ -25,7 +25,7 @@
         </activity>
 
         <service
-            android:name=".GraspForegroundService"
+            android:name=".OtterForegroundService"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
 

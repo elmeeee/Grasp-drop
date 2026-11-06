@@ -1,5 +1,5 @@
 #!/bin/bash
-# Package the Grasp Windows .exe (Electron shell + Rust sidecar).
+# Package the Otter Windows .exe (Electron shell + Rust sidecar).
 set -e
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"

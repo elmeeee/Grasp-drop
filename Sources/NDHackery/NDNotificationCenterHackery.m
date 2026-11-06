@@ -1,6 +1,6 @@
 //
 //  NDNotificationCenterHackery.m
-//  Grasp
+//  Otter
 //
 //  Created by Elmee on 10/08/26.
 //  Copyright © 2026 KaMy Studio. All rights reserved.

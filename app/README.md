@@ -1,26 +1,26 @@
-# Grasp Apps
+# Otter Apps
 
-Grasp ships as native applications on every platform, all built on the shared
-**Rust core** (`core/grasp-core`), which implements the LocalSend v2 protocol so
-Grasp devices and the official LocalSend app interoperate.
+Otter ships as native applications on every platform, all built on the shared
+**Rust core** (`core/otter-core`).
 
 ## Architecture
 
 ```
         ┌─────────────────────────────────────────────┐
-        │              core/grasp-core (Rust)          │
+        │              core/otter-core (Rust)          │
         │  protocol · TLS identity · HTTPS server       │
-        │  multicast discovery · file sender · FFI/JNI  │
+        │  multicast discovery · file sender · web hub  │
+        │  C FFI (cbindgen) · Android JNI               │
         └───────────────┬───────────────┬──────────────┘
                         │               │
         ┌───────────────▼───┐   ┌───────▼──────────────┐
         │   macOS (Swift)   │   │   Android (Capacitor) │
-        │  native menu bar  │   │  JNI → libgrasp_core   │
+        │  native menu bar  │   │  JNI → libotter_core   │
         └───────────────────┘   └───────────────────────┘
                         │               │
         ┌───────────────▼───────────────▼──────────────┐
         │        Windows (Electron + Capacitor UI)      │
-        │   renderer ⇄ preload bridge ⇄ grasp.exe       │
+        │   renderer ⇄ preload bridge ⇄ otter.exe       │
         └───────────────────────────────────────────────┘
 ```
 
@@ -28,69 +28,46 @@ Grasp devices and the official LocalSend app interoperate.
 
 ```
 app/
-├── www/                     # Shared Web UI (HTML/CSS/JS) used by all shells
-├── capacitor.config.json    # Capacitor configuration
+├── www/                     # Shared web UI used by the Android and Windows shells
+├── capacitor.config.json    # Capacitor config (appId org.otter.app)
 ├── android/                 # Capacitor Android project (.apk)
 │   └── app/src/main/
-│       ├── java/org/grasp/app/
+│       ├── java/org/otter/app/
 │       │   ├── MainActivity.java
-│       │   ├── GraspNativePlugin.java        # JS ⇄ Rust bridge (JNI)
-│       │   └── GraspForegroundService.java   # keeps node alive + multicast lock
-│       └── jniLibs/                          # libgrasp_core.so (per ABI)
-└── electron/                # Capacitor/Electron Windows shell (.exe)
+│       │   ├── OtterNativePlugin.java         # JS ⇄ Rust bridge (JNI)
+│       │   └── OtterForegroundService.java    # keeps node alive + multicast lock
+│       └── jniLibs/                           # libotter_core.so (per ABI)
+└── electron/                # Electron Windows shell (.exe)
     ├── lib/index.js         # main process
     ├── lib/core.js          # spawns the Rust sidecar
-    ├── lib/preload.js       # GraspNative bridge for the renderer
-    └── resources/bin/       # grasp.exe sidecar
+    ├── lib/preload.js       # OtterNative bridge for the renderer
+    └── resources/bin/       # otter.exe sidecar
 ```
 
 ## Building
 
-### 1. Build the Rust core for every platform
-
 ```bash
-./scripts/build_core.sh
+./scripts/build_core.sh      # Rust core for every platform
+./scripts/build_android.sh   # → bin/otter-android-debug.apk
+./scripts/build_windows.sh   # → app/electron/dist/Otter-<version>-x64.exe
 ```
-
-This cross-compiles the core and stages binaries:
 
 | Output | Target |
 |---|---|
-| `bin/grasp` | host (macOS) |
-| `bin/grasp-windows-x64.exe` | Windows x64 |
-| `bin/grasp-linux-x64` | Linux x64 |
-| `app/electron/resources/bin/grasp.exe` | Windows sidecar |
-| `app/android/app/src/main/jniLibs/*/libgrasp_core.so` | Android ABIs |
+| `bin/otter` | macOS (host) |
+| `bin/otter-windows-x64.exe` | Windows x64 |
+| `bin/otter-linux-x64` | Linux x64 |
+| `app/electron/resources/bin/otter.exe` | Windows sidecar |
+| `app/android/app/src/main/jniLibs/*/libotter_core.so` | Android ABIs |
 
-Prerequisites: `rustup` targets `x86_64-pc-windows-gnu`, `x86_64-unknown-linux-gnu`,
+Prerequisites: Rust targets `x86_64-pc-windows-gnu`, `x86_64-unknown-linux-gnu`,
 `aarch64-linux-android`, `armv7-linux-androideabi`, `x86_64-linux-android`;
-`cargo-ndk` + Android NDK; `mingw-w64`; `cargo-zigbuild` + `zig`.
+`cargo-ndk` with the Android NDK; `mingw-w64`; `cargo-zigbuild` with `zig`.
 
-### 2. Android APK
-
-```bash
-./scripts/build_android.sh
-# → bin/grasp-android-debug.apk
-```
-
-Requires JDK 17 (`JAVA_HOME` pointing at it) and the Android SDK.
-
-### 3. Windows .exe
-
-```bash
-./scripts/build_windows.sh
-# → app/electron/dist/Grasp-<version>-x64.exe
-```
-
-`electron-builder` produces the NSIS installer and a portable executable. On
-Windows this runs directly; from macOS it needs Wine or a Windows CI runner.
-
-## Permissions
-
-The Android app requests:
+## Permissions (Android)
 
 - `INTERNET`, `ACCESS_NETWORK_STATE`, `ACCESS_WIFI_STATE`
-- `CHANGE_WIFI_MULTICAST_STATE` — required for UDP multicast discovery
-- `NEARBY_WIFI_DEVICES` — Android 13+ Wi-Fi device access
-- `FOREGROUND_SERVICE` + `FOREGROUND_SERVICE_DATA_SYNC` — keep the node running
-- media read permissions — for selecting files to send
+- `CHANGE_WIFI_MULTICAST_STATE`: required for UDP multicast discovery
+- `NEARBY_WIFI_DEVICES`: Android 13+ Wi-Fi device access
+- `FOREGROUND_SERVICE` and `FOREGROUND_SERVICE_DATA_SYNC`: keep the node running
+- Media read permissions: to pick files to send

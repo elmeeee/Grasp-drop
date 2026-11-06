@@ -1,11 +1,11 @@
 {
-  "appId": "org.grasp.app",
-  "appName": "Grasp",
+  "appId": "org.otter.app",
+  "appName": "Otter",
   "webDir": "www",
   "server": {
     "androidScheme": "https"
   },
   "plugins": {
-    "GraspNative": {}
+    "OtterNative": {}
   }
 }

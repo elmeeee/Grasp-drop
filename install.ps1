@@ -1,4 +1,4 @@
-# Grasp — Windows 1-Line Terminal Installer
+# Otter — Windows 1-Line Terminal Installer
 # Usage in PowerShell:
 #   iwr -useb https://raw.githubusercontent.com/elmeeee/Grasp-drop/main/install.ps1 | iex
 
@@ -6,12 +6,12 @@ $ErrorActionPreference = "Stop"
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls13
 
 $Version = "1.0.0"
-$Url = "https://github.com/elmeeee/Grasp-drop/releases/download/v$Version/grasp-windows-x64.exe"
-$InstallDir = "$env:LOCALAPPDATA\Grasp"
-$TargetExe = "$InstallDir\grasp.exe"
+$Url = "https://github.com/elmeeee/Grasp-drop/releases/download/v$Version/otter-windows-x64.exe"
+$InstallDir = "$env:LOCALAPPDATA\Otter"
+$TargetExe = "$InstallDir\otter.exe"
 
 Write-Host "==================================================" -ForegroundColor Cyan
-Write-Host "   Installing Grasp for Windows..." -ForegroundColor Cyan
+Write-Host "   Installing Otter for Windows..." -ForegroundColor Cyan
 Write-Host "==================================================" -ForegroundColor Cyan
 
 New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
@@ -26,7 +26,7 @@ if ($UserPath -notlike "*$InstallDir*") {
 }
 
 Write-Host "--------------------------------------------------" -ForegroundColor Cyan
-Write-Host "✓ Grasp installed successfully!" -ForegroundColor Green
-Write-Host "  Type 'grasp' in any terminal to start the server." -ForegroundColor White
+Write-Host "✓ Otter installed successfully!" -ForegroundColor Green
+Write-Host "  Type 'otter' in any terminal to start the server." -ForegroundColor White
 Write-Host "==================================================" -ForegroundColor Cyan
 

@@ -4,19 +4,19 @@ build_spm/
 .vscode/
 
 # Built binaries
-bin/Grasp.app
+bin/Otter.app
 bin/DropFile.app
 bin/LocalSend.app
-bin/grasp-windows-x64.exe
-bin/grasp-linux-x64
-bin/grasp-macos
-bin/grasp
-bin/grasp-android-debug.apk
-bin/grasp-server
-bin/grasp-server.exe
+bin/otter-windows-x64.exe
+bin/otter-linux-x64
+bin/otter-macos
+bin/otter
+bin/otter-android-debug.apk
+bin/otter-server
+bin/otter-server.exe
 
 # Rust
-core/grasp-core/target/
+core/otter-core/target/
 **/target/
 
 # Node / Capacitor / Electron

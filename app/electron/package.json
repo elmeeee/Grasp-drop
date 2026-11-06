@@ -1,7 +1,7 @@
 {
-  "name": "grasp-electron",
+  "name": "otter-electron",
   "version": "0.1.0",
-  "description": "Grasp desktop app for Windows (Electron + Rust core sidecar)",
+  "description": "Otter desktop app for Windows (Electron + Rust core sidecar)",
   "main": "lib/index.js",
   "author": "KaMy Studio",
   "license": "MIT",
@@ -18,8 +18,8 @@
     "electron-builder": "^24.13.3"
   },
   "build": {
-    "appId": "org.grasp.app",
-    "productName": "Grasp",
+    "appId": "org.otter.app",
+    "productName": "Otter",
     "files": [
       "lib/**/*",
       "src/**/*",
@@ -34,7 +34,7 @@
     ],
     "win": {
       "target": ["nsis", "portable"],
-      "artifactName": "Grasp-${version}-${arch}.${ext}"
+      "artifactName": "Otter-${version}-${arch}.${ext}"
     }
   }
 }

@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Grasp</string>
-    <string name="title_activity_main">Grasp</string>
-    <string name="package_name">org.grasp.app</string>
-    <string name="custom_url_scheme">org.grasp.app</string>
+    <string name="app_name">Otter</string>
+    <string name="title_activity_main">Otter</string>
+    <string name="package_name">org.otter.app</string>
+    <string name="custom_url_scheme">org.otter.app</string>
 </resources>

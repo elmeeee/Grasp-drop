@@ -1,8 +1,8 @@
 {
-  "name": "grasp-app",
+  "name": "otter-app",
   "version": "0.1.0",
   "private": true,
-  "description": "Grasp cross-platform file transfer app (Capacitor)",
+  "description": "Otter cross-platform file transfer app (Capacitor)",
   "scripts": {
     "build": "echo 'static assets, no build step'",
     "sync": "cap sync"

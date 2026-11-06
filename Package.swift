@@ -2,12 +2,12 @@
 import PackageDescription
 
 let package = Package(
-    name: "Grasp",
+    name: "Otter",
     platforms: [
         .macOS(.v13)
     ],
     products: [
-        .executable(name: "GraspExecutable", targets: ["Grasp"])
+        .executable(name: "OtterExecutable", targets: ["Otter"])
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.25.0"),
@@ -20,13 +20,13 @@ let package = Package(
             publicHeadersPath: "."
         ),
         .executableTarget(
-            name: "Grasp",
+            name: "Otter",
             dependencies: [
                 "NDHackery",
                 .product(name: "SwiftProtobuf", package: "swift-protobuf"),
                 .product(name: "SwiftECC", package: "SwiftECC")
             ],
-            path: "Sources/Grasp"
+            path: "Sources/Otter"
         )
     ]
 )

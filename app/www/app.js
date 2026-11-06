@@ -1,8 +1,8 @@
-// Grasp web UI. Runs inside a Capacitor WebView (Windows/Android) and talks to
-// the native layer through the `GraspNative` plugin. The plugin exposes the
+// Otter web UI. Runs inside a Capacitor WebView (Windows/Android) and talks to
+// the native layer through the `OtterNative` plugin. The plugin exposes the
 // Rust core (server + discovery + sender) to JavaScript.
 
-const { GraspNative } = window.Capacitor?.Plugins ?? {};
+const { OtterNative } = window.Capacitor?.Plugins ?? {};
 
 const state = {
   peers: [],
@@ -102,9 +102,9 @@ function escapeHtml(value) {
 }
 
 async function refreshPeers() {
-  if (!GraspNative) return;
+  if (!OtterNative) return;
   try {
-    const { peers } = await GraspNative.getPeers();
+    const { peers } = await OtterNative.getPeers();
     state.peers = peers || [];
     renderPeers();
   } catch (error) {
@@ -113,9 +113,9 @@ async function refreshPeers() {
 }
 
 async function refreshFiles() {
-  if (!GraspNative) return;
+  if (!OtterNative) return;
   try {
-    const { files } = await GraspNative.getReceivedFiles();
+    const { files } = await OtterNative.getReceivedFiles();
     renderFiles(files || []);
   } catch (error) {
     console.error("getReceivedFiles failed", error);
@@ -123,14 +123,14 @@ async function refreshFiles() {
 }
 
 async function startService() {
-  if (!GraspNative) {
+  if (!OtterNative) {
     toast("Native plugin unavailable");
     return;
   }
   try {
-    const result = await GraspNative.start({ alias: "Grasp Desktop" });
+    const result = await OtterNative.start({ alias: "Otter Desktop" });
     state.running = true;
-    els.alias.textContent = result.alias || "Grasp Device";
+    els.alias.textContent = result.alias || "Otter Device";
     toast("Visible on the network");
     refreshPeers();
   } catch (error) {
@@ -139,8 +139,8 @@ async function startService() {
 }
 
 async function stopService() {
-  if (!GraspNative) return;
-  await GraspNative.stop();
+  if (!OtterNative) return;
+  await OtterNative.stop();
   state.running = false;
   els.alias.textContent = "Receiver off";
   state.peers = [];
@@ -164,7 +164,7 @@ async function sendFiles(peer, files) {
   toast(`Sending ${files.length} file(s) to ${peer.alias || peer.ip}…`);
   try {
     const payloads = await Promise.all(files.map(readFilePayload));
-    const result = await GraspNative.sendFiles({
+    const result = await OtterNative.sendFiles({
       targetIp: peer.ip,
       port: peer.port || 53317,
       files: payloads,
@@ -191,7 +191,7 @@ function readFilePayload(file) {
 
 async function saveFile(name) {
   try {
-    const result = await GraspNative.saveReceivedFile({ name });
+    const result = await OtterNative.saveReceivedFile({ name });
     toast(result.savedTo ? `Saved to ${result.savedTo}` : "File saved");
   } catch (error) {
     toast(`Save failed: ${error.message || error}`);
@@ -232,7 +232,7 @@ function wireControls() {
     else stopService();
   });
   els.refresh.addEventListener("click", async () => {
-    await GraspNative?.scanSubnet?.();
+    await OtterNative?.scanSubnet?.();
     refreshPeers();
   });
 }

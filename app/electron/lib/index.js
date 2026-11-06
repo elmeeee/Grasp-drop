@@ -11,7 +11,7 @@ async function createWindow() {
     minWidth: 420,
     minHeight: 600,
     backgroundColor: "#0b0f19",
-    title: "Grasp",
+    title: "Otter",
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
@@ -24,7 +24,7 @@ async function createWindow() {
 }
 
 app.whenReady().then(async () => {
-  // Launch the bundled Rust core sidecar (grasp.exe) so the renderer can reach
+  // Launch the bundled Rust core sidecar (otter.exe) so the renderer can reach
   // it over the same local API used on Android.
   startCore();
   await createWindow();

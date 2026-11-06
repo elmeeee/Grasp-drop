@@ -1,4 +1,4 @@
-// Preload script exposing a `GraspNative` bridge to the renderer. On Windows the
+// Preload script exposing a `OtterNative` bridge to the renderer. On Windows the
 // heavy lifting happens in the Rust core sidecar; this bridge adapts the local
 // HTTPS API into the same promise-based shape used by the Android plugin.
 
@@ -17,9 +17,9 @@ async function jsonFetch(url, options) {
 
 contextBridge.exposeInMainWorld("Capacitor", {
   Plugins: {
-    GraspNative: {
+    OtterNative: {
       async start({ alias }) {
-        const info = await jsonFetch(`${BASE}/api/localsend/v2/info`);
+        const info = await jsonFetch(`${BASE}/api/otter/v2/info`);
         return { alias: alias || info.alias, fingerprint: info.fingerprint, running: true };
       },
       async stop() {
@@ -29,10 +29,10 @@ contextBridge.exposeInMainWorld("Capacitor", {
         // Peer discovery is exposed by the Rust core's info endpoint in a
         // future revision; return an empty list when unavailable.
         try {
-          const peers = await jsonFetch(`${BASE}/api/localsend/v2/register`, {
+          const peers = await jsonFetch(`${BASE}/api/otter/v2/register`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ alias: "Grasp", version: "2.2", fingerprint: "" }),
+            body: JSON.stringify({ alias: "Otter", version: "2.2", fingerprint: "" }),
           });
           return { peers: peers ? [peers] : [] };
         } catch (_) {
@@ -44,7 +44,7 @@ contextBridge.exposeInMainWorld("Capacitor", {
       },
       async getReceivedFiles() {
         try {
-          const response = await jsonFetch(`${BASE}/api/localsend/v2/prepare-download`, {
+          const response = await jsonFetch(`${BASE}/api/otter/v2/prepare-download`, {
             method: "POST",
           });
           const files = Object.values(response.files || {}).map((file) => ({

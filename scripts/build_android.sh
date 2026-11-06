@@ -1,6 +1,6 @@
 #!/bin/bash
-# Build the Grasp Android APK. The Rust core must be built first with
-# scripts/build_core.sh so that jniLibs contains libgrasp_core.so.
+# Build the Otter Android APK. The Rust core must be built first with
+# scripts/build_core.sh so that jniLibs contains libotter_core.so.
 set -e
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -14,5 +14,5 @@ echo "==> Building debug APK…"
 (cd "$ROOT/app/android" && ./gradlew assembleDebug)
 
 APK="$ROOT/app/android/app/build/outputs/apk/debug/app-debug.apk"
-cp "$APK" "$ROOT/bin/grasp-android-debug.apk"
-echo "==> APK ready: $ROOT/bin/grasp-android-debug.apk"
+cp "$APK" "$ROOT/bin/otter-android-debug.apk"
+echo "==> APK ready: $ROOT/bin/otter-android-debug.apk"
